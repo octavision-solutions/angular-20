@@ -1,138 +1,51 @@
-# Version20
+# DMS Plus — Distribution Management System
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+DMS Plus is a distribution management application designed to help distributors manage Salesmen, Routes, Customers, Products, Sales, Credit, and Inventory efficiently.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+It is built as an Angular 20 monorepo (Nx) with a CodeIgniter 4 backend API, optimized for fast workflows, shared UI components, and modular development.
 
-Run `npx nx graph` to visually explore what got created. Now, let's get you up to speed!
+## Key Capabilities
+- Sales operations with fast item entry and keyboard-friendly search
+- Route planning and salesman assignment
+- Customer onboarding and account management
+- Product catalog management (price, stock, status)
+- Sales, returns, and credit handling
+- Inventory tracking and adjustments
+- Admin and reporting modules
 
-## Finish your CI setup
+## Tech Stack
+- Angular 20 + Nx (monorepo)
+- CoreUI + Bootstrap 5 (compiled CSS)
+- Shared UI library (e.g., `SearchList` component)
+- Shared Services library (API integration via `ApiService`)
+- PHP CodeIgniter 4 backend API (`backend-api/`)
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/Uh3hehXIpg)
+## Project Layout
+- `apps/dms-plus/` – Main Angular application (Dashboard, Accounts, Inventory, Products, Transactions, Admin, etc.)
+- `libs/shared-ui/` – Reusable UI components (SearchList with templates, keyboard navigation, focus API)
+- `libs/shared-services/` – Cross-app services and tokens (API_BASE_URL)
+- `libs/ui/` – Basic/legacy UI helpers
+- `backend-api/` – REST API (see `REST_API_DOCUMENTATION.md`)
 
+## Getting Started
+Follow the setup guide to install dependencies, run the Angular app, and start the backend.
 
-## Run tasks
+- Setup Guide: [HOW-TO-SETUP.md](./HOW-TO-SETUP.md)
 
-To run tasks with Nx use:
+## Highlights in UX
+- Reusable `SearchList` with debounced filtering and custom templates for product picking
+- Single-line sale item entry (select product → qty focus → Enter to add)
+- Compact spacing and keyboard-first navigation to speed up sales workflows
 
-```sh
-npx nx <target> <project-name>
-```
-
-For example:
-
-```sh
-npx nx build myproject
-```
-
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-To install a new plugin you can use the `nx add` command. Here's an example of adding the React plugin:
-```sh
-npx nx add @nx/react
-```
-
-Use the plugin's generator to create new projects. For example, to create a new React app or library:
-
-```sh
-# Generate an app
-# Angular 20 Workspace (Nx)
-
-Monorepo for an Angular 20 application suite with a PHP (CodeIgniter 4) backend API. Built with Nx for efficient builds, shared libraries, and modular development.
-
-## Overview
-- Angular 20 + Nx workspace with multiple apps
-- Shared UI and services libraries
-- Backend API using CodeIgniter 4 in `backend-api/`
-- Styling: Bootstrap 5 (compiled CSS), modern Sass modules (`@use`)
-
-## Repository Structure
-- `apps/`
-	- `dms-plus/` – Main Angular app (Dashboard, Accounts, Inventory, Products, Transactions, Admin, etc.)
-	- `accounts-app/`, `my-app/`, `api/` – Additional/sample Angular apps
-- `libs/`
-	- `shared-ui/` – Reusable UI components (e.g., SearchList)
-	- `shared-services/` – Cross-app services (API, tokens)
-	- `ui/` – Legacy/simple UI helpers
-- `backend-api/` – CodeIgniter 4 REST API (see `REST_API_DOCUMENTATION.md`)
-
-## Requirements
-- Node.js 20+ and npm
-- PHP 8.1+
-- MySQL/MariaDB (or compatible)
-
-## Setup
-```sh
-# Install dependencies
-npm install
-
-# Explore the project graph (optional)
-npx nx graph
-```
-
-## Run the Angular App (dms-plus)
-```sh
-# Development server
-npx nx serve dms-plus
-
-# Production build
-npx nx build dms-plus
-
-# Lint and tests
-npx nx lint dms-plus
-npx nx test dms-plus
-```
-
-Angular environment settings (API base URL, etc.) live under the app’s `src/environments` directory. Adjust as needed for your setup.
-
-## Backend API (CodeIgniter 4)
-```sh
-# Copy environment and configure DB
-cp backend-api/.env.example backend-api/.env  # if present
-# Or edit backend-api/app/Config/Database.php
-
-# Create database schema
-mysql -u <user> -p <db_name> < backend-api/database_setup.sql
-
-# Serve API locally (PHP built-in server)
-php -S localhost:8080 -t backend-api/public
-```
-
-More details and endpoints: `backend-api/REST_API_DOCUMENTATION.md` and `backend-api/README.md`.
-
-## Notable Shared Components
-- `shared-ui/SearchList`
-	- Debounced filtering by keys
-	- Customizable templates (item/header/footer/empty)
-	- Keyboard navigation (ArrowUp/Down/Enter) and `focus()` API
-	- Click-to-focus for seamless keyboard usage
-
-## Styling Notes
-- Bootstrap 5 via compiled CSS to avoid vendor Sass warnings
-- Migrated app styles to modern Sass (`@use`); reduced legacy lints
-
-## Scripts Cheatsheet
-```sh
-# Generic Nx usage
-npx nx <target> <project>
-
-# Examples
-npx nx serve dms-plus
-npx nx build dms-plus
-npx nx lint dms-plus
-npx nx test dms-plus
-```
+## Documentation
+- Backend API: `backend-api/REST_API_DOCUMENTATION.md`
+- Shared UI: `libs/shared-ui/README.md`
+- Shared Services: `libs/shared-services/README.md`
 
 ## Contributing
 1. Create a feature branch
-2. Commit with conventional messages
-3. Open a PR against `main`
+2. Use conventional commits
+3. Open a PR to `main`
 
 ## License
 MIT
