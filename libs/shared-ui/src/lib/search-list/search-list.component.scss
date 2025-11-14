@@ -1,0 +1,26 @@
+.search-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.search-list__body {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.search-list__row {
+  border-radius: 0.25rem;
+}
+.search-list__row.active {
+  background: rgba(0, 123, 255, 0.08);
+}
+
+.search-list__item {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+.search-list__item:hover {
+  background: rgba(0,0,0,0.03);
+  cursor: pointer;
+}

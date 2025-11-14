@@ -1,0 +1,45 @@
+<div class="search-list" (mousedown.capture)="focus()">
+  <div class="search-list__header">
+    <ng-container *ngIf="headerTpl; else defaultHeader" [ngTemplateOutlet]="headerTpl.template"></ng-container>
+    <ng-template #defaultHeader>
+      <input
+        type="text"
+        class="form-control"
+        [placeholder]="placeholder"
+        [ngModel]="query"
+        (ngModelChange)="onQueryInput($event)"
+        (keydown)="onInputKeydown($event)"
+        #queryInput
+      />
+    </ng-template>
+  </div>
+
+  <div class="search-list__body" role="listbox" [attr.aria-activedescendant]="activeIndex >= 0 ? 'sl-item-' + activeIndex : null">
+    <ng-container *ngIf="filteredItems.length > 0; else emptyBlock">
+      <div *ngFor="let item of filteredItems; let i = index; trackBy: trackFn"
+           (click)="onSelect(item)"
+           class="search-list__row"
+           [class.active]="i === activeIndex"
+           role="option"
+           [attr.aria-selected]="i === activeIndex"
+           [id]="'sl-item-' + i"
+           #itemEl>
+        <ng-container *ngIf="itemTpl; else defaultItem"
+                      [ngTemplateOutlet]="itemTpl.template"
+                      [ngTemplateOutletContext]="{ $implicit: item, item: item, index: i }">
+        </ng-container>
+        <ng-template #defaultItem>
+          <div class="search-list__item">{{ item | json }}</div>
+        </ng-template>
+      </div>
+    </ng-container>
+    <ng-template #emptyBlock>
+      <ng-container *ngIf="emptyTpl; else defaultEmpty" [ngTemplateOutlet]="emptyTpl.template"></ng-container>
+      <ng-template #defaultEmpty>
+        <div class="text-muted small py-2">{{ noResultText }}</div>
+      </ng-template>
+    </ng-template>
+  </div>
+
+  <div class="search-list__footer" *ngIf="footerTpl" [ngTemplateOutlet]="footerTpl.template"></div>
+</div>

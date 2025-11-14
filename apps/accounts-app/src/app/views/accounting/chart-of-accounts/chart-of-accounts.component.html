@@ -1,0 +1,249 @@
+<c-container>
+  <c-row>
+    <c-col xs="12">
+      <c-card>
+        <c-card-header>
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Chart of Accounts</h4>
+            <div class="d-flex gap-2">
+              <button cButton color="success" (click)="addAccount()">
+                <svg cIcon name="cil-plus"></svg>
+                Add Account
+              </button>
+              <button cButton color="info" (click)="importFromExcel()">
+                <svg cIcon name="cil-data-transfer-up"></svg>
+                Import
+              </button>
+              <button cButton color="primary" (click)="exportToExcel()">
+                <svg cIcon name="cil-data-transfer-down"></svg>
+                Export
+              </button>
+            </div>
+          </div>
+        </c-card-header>
+
+        <c-card-body>
+          <!-- Search and Filter Section -->
+          <c-row class="mb-3">
+            <c-col md="6">
+              <div class="form-group">
+                <label for="searchTerm">Search Accounts</label>
+                <input 
+                  cFormControl 
+                  type="text" 
+                  id="searchTerm"
+                  placeholder="Search by account name or code..."
+                  [(ngModel)]="searchTerm"
+                  (ngModelChange)="filterAccounts()"
+                />
+              </div>
+            </c-col>
+            <c-col md="4">
+              <div class="form-group">
+                <label for="accountType">Filter by Type</label>
+                <select 
+                  cSelect
+                  id="accountType"
+                  [(ngModel)]="selectedAccountType"
+                  (ngModelChange)="filterAccounts()"
+                >
+                  <option value="">All Types</option>
+                  <option *ngFor="let type of accountTypes" [value]="type.value">
+                    {{ type.label }}
+                  </option>
+                </select>
+              </div>
+            </c-col>
+            <c-col md="2">
+              <div class="form-group">
+                <span class="visually-hidden">Actions</span>
+                <button cButton color="secondary" class="w-100" (click)="refreshAccounts()" [disabled]="loading">
+                  <svg cIcon name="cil-reload"></svg>
+                  {{ loading ? 'Loading...' : 'Refresh' }}
+                </button>
+              </div>
+            </c-col>
+          </c-row>
+
+          <!-- Loading Spinner -->
+          <div *ngIf="loading" class="text-center py-4">
+            <c-spinner aria-hidden="true"></c-spinner>
+            <p class="mt-2 text-muted">Loading chart of accounts...</p>
+          </div>
+
+          <!-- Error Alert -->
+          <c-alert 
+            *ngIf="error && !loading" 
+            color="danger" 
+            [dismissible]="true"
+            (alertChange)="error = ''"
+          >
+            {{ error }}
+          </c-alert>
+
+          <!-- Chart of Accounts Table -->
+          <div class="table-responsive" *ngIf="!loading">
+            <table cTable hover striped>
+              <thead class="table-header">
+                <tr>
+                  <th>Account Code</th>
+                  <th>Account Name</th>
+                  <th>Type</th>
+                  <th>Sub Type</th>
+                  <th>Level</th>
+                  <th>Status</th>
+                  <th>Children</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let account of filteredAccounts" class="table-row">
+                  <td>
+                    <span class="account-code fw-bold">{{ account.account_code }}</span>
+                  </td>
+                  <td>
+                    <span [innerHTML]="getIndentation(account.level)"></span>
+                    <span [class]="'level-' + account.level">{{ account.account_name }}</span>
+                  </td>
+                  <td>
+                    <c-badge [color]="getAccountTypeColor(account.account_type)">
+                      {{ getAccountTypeLabel(account.account_type) }}
+                    </c-badge>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{ account.account_sub_type || '-' }}</small>
+                  </td>
+                  <td class="text-center">
+                    <c-badge color="info">
+                      Level {{ account.level }}
+                    </c-badge>
+                  </td>
+                  <td>
+                    <c-badge [color]="account.is_active ? 'success' : 'secondary'">
+                      {{ account.is_active ? 'Active' : 'Inactive' }}
+                    </c-badge>
+                  </td>
+                  <td class="text-center">
+                    <c-badge [color]="account.has_children ? 'primary' : 'light'" [textColor]="account.has_children ? 'white' : 'dark'">
+                      {{ account.has_children ? 'Yes' : 'No' }}
+                    </c-badge>
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1">
+                      <button 
+                        cButton 
+                        size="sm" 
+                        color="primary" 
+                        variant="outline"
+                        (click)="editAccount(account)"
+                        title="Edit Account"
+                      >
+                        <svg cIcon name="cil-pencil"></svg>
+                      </button>
+                      <button 
+                        cButton 
+                        size="sm" 
+                        [color]="account.is_active ? 'warning' : 'success'"
+                        variant="outline"
+                        (click)="toggleAccountStatus(account)"
+                        [title]="account.is_active ? 'Deactivate Account' : 'Activate Account'"
+                      >
+                        <svg [cIcon]="account.is_active ? 'cil-ban' : 'cil-check'"></svg>
+                      </button>
+                      <button 
+                        cButton 
+                        size="sm" 
+                        color="danger" 
+                        variant="outline"
+                        (click)="deleteAccount(account)"
+                        title="Delete Account"
+                        [disabled]="account.level === 1 || account.has_children"
+                      >
+                        <svg cIcon name="cil-trash"></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div *ngIf="filteredAccounts.length === 0 && !loading && !error" class="text-center py-4">
+            <p class="text-muted">No accounts found matching your search criteria.</p>
+          </div>
+        </c-card-body>
+      </c-card>
+    </c-col>
+  </c-row>
+</c-container>
+
+<!-- Add/Edit Account Modal -->
+<c-modal 
+  id="addAccountModal" 
+  [visible]="showAddModal" 
+  (visibleChange)="showAddModal = $event"
+  size="lg"
+>
+  <c-modal-header>
+    <h4 cModalTitle>Add New Account</h4>
+  </c-modal-header>
+  <c-modal-body>
+    <form>
+      <c-row>
+        <c-col md="6">
+          <div class="form-group mb-3">
+            <label for="accountCode">Account Code *</label>
+            <input cFormControl type="text" id="accountCode" placeholder="e.g., 1140" required />
+          </div>
+        </c-col>
+        <c-col md="6">
+          <div class="form-group mb-3">
+            <label for="accountName">Account Name *</label>
+            <input cFormControl type="text" id="accountName" placeholder="e.g., Inventory" required />
+          </div>
+        </c-col>
+      </c-row>
+      
+      <c-row>
+        <c-col md="6">
+          <div class="form-group mb-3">
+            <label for="accountTypeSelect">Account Type *</label>
+            <select cSelect id="accountTypeSelect" required>
+              <option value="">Select Type</option>
+              <option value="Asset">Asset</option>
+              <option value="Liability">Liability</option>
+              <option value="Equity">Equity</option>
+              <option value="Income">Income</option>
+              <option value="Expense">Expense</option>
+            </select>
+          </div>
+        </c-col>
+        <c-col md="6">
+          <div class="form-group mb-3">
+            <label for="parentAccount">Parent Account</label>
+            <select cSelect id="parentAccount">
+              <option value="">Select Parent Account</option>
+              <option *ngFor="let account of getParentAccounts()" [value]="account.id">
+                {{ account.account_code }} - {{ account.account_name }}
+              </option>
+            </select>
+          </div>
+        </c-col>
+      </c-row>
+      
+      <div class="form-group mb-3">
+        <label for="description">Description</label>
+        <textarea cFormControl id="description" rows="3" placeholder="Optional description"></textarea>
+      </div>
+      
+      <div class="form-check mb-3">
+        <input cFormCheck type="checkbox" id="isActive" checked />
+        <label cFormCheckLabel for="isActive">Active Account</label>
+      </div>
+    </form>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" (click)="showAddModal = false">Cancel</button>
+    <button cButton color="primary">Save Account</button>
+  </c-modal-footer>
+</c-modal>

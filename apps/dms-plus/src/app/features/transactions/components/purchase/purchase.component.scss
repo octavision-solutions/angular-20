@@ -1,0 +1,129 @@
+.purchase-form {
+  .card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    
+    .card-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      
+      h5, h6 {
+        color: #495057;
+        font-weight: 600;
+      }
+    }
+  }
+  
+  .form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-control {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    
+    &:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    &:invalid {
+      border-color: #dc3545;
+    }
+  }
+  
+  .btn {
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    
+    &.btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+    }
+    
+    &.btn-success {
+      background-color: #28a745;
+      border-color: #28a745;
+    }
+    
+    &.btn-danger {
+      background-color: #dc3545;
+      border-color: #dc3545;
+    }
+    
+    &.btn-secondary {
+      background-color: #6c757d;
+      border-color: #6c757d;
+    }
+  }
+  
+  .table {
+    margin-bottom: 0;
+    
+    td {
+      padding: 0.5rem;
+      vertical-align: middle;
+    }
+    
+    .table-info {
+      background-color: #d1ecf1;
+      font-weight: 600;
+    }
+  }
+  
+  .border-bottom {
+    border-bottom: 1px solid #dee2e6 !important;
+  }
+  
+  .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+// Pakistani currency formatting
+.currency-pkr {
+  color: #17a2b8;
+  font-weight: 600;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .purchase-form {
+    .row {
+      margin: 0 -5px;
+      
+      [class*="col-"] {
+        padding: 0 5px;
+        margin-bottom: 1rem;
+      }
+    }
+    
+    .table-responsive {
+      font-size: 0.875rem;
+    }
+    
+    .btn {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+// Print styles
+@media print {
+  .purchase-form {
+    .btn {
+      display: none;
+    }
+    
+    .card {
+      border: none;
+      box-shadow: none;
+    }
+  }
+}

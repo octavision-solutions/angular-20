@@ -1,0 +1,130 @@
+.audit-form {
+  .card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    
+    .card-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      
+      h5, h6 {
+        color: #495057;
+        font-weight: 600;
+      }
+    }
+  }
+  
+  .form-control {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    
+    &:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    &.audit-input {
+      width: 100px;
+      text-align: center;
+      font-weight: 600;
+    }
+  }
+  
+  .table {
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      border-top: none;
+      padding: 1rem 0.75rem;
+    }
+    
+    td {
+      padding: 0.75rem;
+      vertical-align: middle;
+    }
+    
+    .table-warning {
+      background-color: #fff3cd;
+    }
+  }
+  
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .difference-badge {
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    
+    &.text-success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    &.text-danger {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    &.text-muted {
+      background-color: #f8f9fa;
+      color: #6c757d;
+    }
+  }
+}
+
+.stat-card {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  
+  h4 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  &.increase {
+    border-left: 4px solid #28a745;
+  }
+  
+  &.decrease {
+    border-left: 4px solid #dc3545;
+  }
+  
+  &.net {
+    border-left: 4px solid #007bff;
+  }
+}
+
+.alert {
+  &.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+  }
+  
+  &.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+  }
+}
+
+@media (max-width: 768px) {
+  .audit-form {
+    .table-responsive {
+      font-size: 0.875rem;
+    }
+    
+    .stat-card {
+      margin-bottom: 1rem;
+    }
+  }
+}

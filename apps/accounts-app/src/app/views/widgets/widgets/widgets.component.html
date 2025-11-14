@@ -1,0 +1,167 @@
+<c-card class="mb-4">
+  <c-card-header>Widgets</c-card-header>
+  <c-card-body>
+    <h5>Widgets Dropdown</h5>
+    <app-widgets-dropdown />
+
+    <h5 class="mt-4">Widget Stats B</h5>
+    <c-row class="g-4">
+      <c-col xl="3" md="6" sm="6">
+        <c-widget-stat-b
+          [title]="'Widget title'"
+          text="Lorem ipsum dolor sit amet enim."
+          value="89.9%"
+        >
+          <c-progress class="my-2" thin [value]="89.9" color="success" />
+        </c-widget-stat-b>
+      </c-col>
+      <c-col xl="3" md="6" sm="6">
+        <c-widget-stat-b
+          [title]="'Widget title'"
+          text="Lorem ipsum dolor sit amet enim."
+          value="12.124"
+        >
+          <c-progress class="my-2" thin [value]="89.9" color="info" />
+        </c-widget-stat-b>
+      </c-col>
+      <c-col xl="3" md="6" sm="6">
+        <c-widget-stat-b
+          [title]="'Widget title'"
+          text="Lorem ipsum dolor sit amet enim."
+          value="$98,111.00"
+        >
+          <c-progress class="my-2" thin [value]="89.9" color="warning" />
+        </c-widget-stat-b>
+      </c-col>
+      <c-col xl="3" md="6" sm="6">
+        <c-widget-stat-b
+          [title]="'Widget title'"
+          text="Lorem ipsum dolor sit amet enim."
+          value="2 TB"
+        >
+          <c-progress class="my-2" thin [value]="89.9" color="primary" />
+        </c-widget-stat-b>
+      </c-col>
+    </c-row>
+
+    <h5 class="mt-4">Widget Stats E</h5>
+    <app-widgets-e />
+
+    <h5 class="mt-4">Widget Stats F</h5>
+    <c-row class="g-4">
+      <c-col xl="3" md="6" sm="6">
+        <c-widget-stat-f
+          [title]="'Income'"
+          color="primary"
+          padding
+          value="$1,999.50"
+        >
+          <ng-template cTemplateId="widgetIconTemplate">
+            <svg cIcon name="cilSettings" size="xl" width="24"></svg>
+          </ng-template>
+        </c-widget-stat-f>
+      </c-col>
+      <c-col xl="3" md="6" sm="6">
+        <c-widget-stat-f
+          [title]="'Income'"
+          color="info"
+          padding
+          value="$1,999.50"
+        >
+          <ng-template cTemplateId="widgetIconTemplate">
+            <svg cIcon name="cilUser" size="xl" width="24"></svg>
+          </ng-template>
+        </c-widget-stat-f>
+      </c-col>
+      <c-col xl="3" md="6" sm="6">
+        <c-widget-stat-f
+          [title]="'Income'"
+          color="warning"
+          padding
+          value="$1,999.50"
+        >
+          <ng-template cTemplateId="widgetIconTemplate">
+            <svg cIcon name="cilMoon" size="xl" width="24"></svg>
+          </ng-template>
+        </c-widget-stat-f>
+      </c-col>
+      <c-col xl="3" md="6" sm="6">
+        <c-widget-stat-f
+          [title]="'Income'"
+          color="danger"
+          padding
+          value="$1,999.50"
+        >
+          <ng-template cTemplateId="widgetIconTemplate">
+            <svg cIcon name="cilBell" size="xl" width="24"></svg>
+          </ng-template>
+        </c-widget-stat-f>
+      </c-col>
+    </c-row>
+
+    <h5 class="mt-4">Widget Brand</h5>
+    <app-widgets-brand />
+    
+    <h5 class="mt-4">Widget Brand with Charts</h5>
+    <app-widgets-brand [withCharts]="true" />
+
+    <h5 class="mt-4">Widget Stats C</h5>
+    <c-card-group class="mb-4">
+      <c-widget-stat-c
+        [title]="'Visitors'"
+        value="87,500"
+      >
+        <ng-template cTemplateId="widgetIconTemplate">
+          <svg cIcon height="36" name="cilPeople"></svg>
+        </ng-template>
+        <ng-template cTemplateId="widgetProgressTemplate">
+          <c-progress class="mt-3 mb-0" thin [value]="75" color="info" />
+        </ng-template>
+      </c-widget-stat-c>
+      <c-widget-stat-c
+        [title]="'New Clients'"
+        value="385"
+      >
+        <ng-template cTemplateId="widgetIconTemplate">
+          <svg cIcon height="36" name="cilUserFollow"></svg>
+        </ng-template>
+        <ng-template cTemplateId="widgetProgressTemplate">
+          <c-progress class="mt-3 mb-0" thin [value]="75" color="success" />
+        </ng-template>
+      </c-widget-stat-c>
+      <c-widget-stat-c
+        [title]="'Products sold'"
+        value="1238"
+      >
+        <ng-template cTemplateId="widgetIconTemplate">
+          <svg cIcon height="36" name="cilBasket"></svg>
+        </ng-template>
+        <ng-template cTemplateId="widgetProgressTemplate">
+          <c-progress class="mt-3 mb-0" thin [value]="75" color="warning" />
+        </ng-template>
+      </c-widget-stat-c>
+      <c-widget-stat-c
+        [title]="'Returning Visitors'"
+        value="28%"
+      >
+        <ng-template cTemplateId="widgetIconTemplate">
+          <svg cIcon height="36" name="cilChartPie"></svg>
+        </ng-template>
+        <ng-template cTemplateId="widgetProgressTemplate">
+          <c-progress class="mt-3 mb-0" thin [value]="75" color="primary" />
+        </ng-template>
+      </c-widget-stat-c>
+      <c-widget-stat-c
+        [title]="'Avg. Time'"
+        value="5:34:11"
+      >
+        <ng-template cTemplateId="widgetIconTemplate">
+          <svg cIcon height="36" name="cilSpeedometer"></svg>
+        </ng-template>
+        <ng-template cTemplateId="widgetProgressTemplate">
+          <c-progress class="mt-3 mb-0" thin [value]="75" color="danger" />
+        </ng-template>
+      </c-widget-stat-c>
+    </c-card-group>
+  </c-card-body>
+</c-card>

@@ -1,0 +1,158 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Sale Return</h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="saleReturnForm" (ngSubmit)="onSubmit()">
+            <!-- Original Invoice Selection -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Original Invoice *</label>
+                <select class="form-control" formControlName="originalInvoiceId" 
+                        (change)="onOriginalInvoiceChange()" required>
+                  <option value="">Select Original Invoice</option>
+                  <option *ngFor="let invoice of originalInvoices" [value]="invoice.invoiceid">
+                    Invoice #{{ invoice.invoiceid }} - {{ invoice.date | date:'shortDate' }} 
+                    - {{ invoice.net_amount | currency:'PKR':'symbol':'1.2-2' }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Return Reason *</label>
+                <select class="form-control" formControlName="returnReason" required>
+                  <option value="">Select Reason</option>
+                  <option value="Damaged Product">Damaged Product</option>
+                  <option value="Expired Product">Expired Product</option>
+                  <option value="Wrong Product">Wrong Product</option>
+                  <option value="Customer Request">Customer Request</option>
+                  <option value="Quality Issue">Quality Issue</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Route</label>
+                <select class="form-control" formControlName="routeId" readonly>
+                  <option value="">Select Route</option>
+                  <option *ngFor="let route of routes" [value]="route.routeid">
+                    {{ route.routename }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Customer Name</label>
+                <input type="text" class="form-control" formControlName="customerName" readonly>
+              </div>
+            </div>
+
+            <!-- Items Section -->
+            <div class="card mt-4" *ngIf="itemsArray.length > 0">
+              <div class="card-header">
+                <h6 class="mb-0">Return Items</h6>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>Original Qty</th>
+                        <th>Return Qty *</th>
+                        <th>Rate</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody formArrayName="items">
+                      <tr *ngFor="let item of itemsArray.controls; let i = index" [formGroupName]="i">
+                        <td>
+                          <input type="hidden" formControlName="productId">
+                          {{ getProductName(item.get('productId')?.value) }}
+                        </td>
+                        <td>
+                          <span class="badge bg-info">{{ item.get('originalQuantity')?.value }}</span>
+                        </td>
+                        <td>
+                          <input type="number" class="form-control" formControlName="returnQuantity" 
+                                 [max]="item.get('originalQuantity')?.value"
+                                 min="0" (input)="onReturnQuantityChange(i)" style="width: 80px;">
+                        </td>
+                        <td>
+                          <span>{{ item.get('rate')?.value | currency:'PKR':'symbol':'1.2-2' }}</span>
+                        </td>
+                        <td>
+                          <strong>{{ (item.get('returnQuantity')?.value || 0) * (item.get('rate')?.value || 0) | currency:'PKR':'symbol':'1.2-2' }}</strong>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="card mt-4" *ngIf="itemsArray.length > 0">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label">Discount (%)</label>
+                      <input type="number" class="form-control" formControlName="discount" 
+                             min="0" max="100" step="0.01">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <table class="table table-sm">
+                      <tr>
+                        <td><strong>Sub Total:</strong></td>
+                        <td class="text-end">{{ calculateSubTotal() | currency:'PKR':'symbol':'1.2-2' }}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Discount:</strong></td>
+                        <td class="text-end">{{ calculateDiscountAmount() | currency:'PKR':'symbol':'1.2-2' }}</td>
+                      </tr>
+                      <tr class="table-warning">
+                        <td><strong>Return Total:</strong></td>
+                        <td class="text-end"><strong>{{ calculateTotal() | currency:'PKR':'symbol':'1.2-2' }}</strong></td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mt-4">
+              <div class="col-md-12 text-end">
+                <button type="button" class="btn btn-secondary me-2" (click)="cancel()">
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-warning" 
+                        [disabled]="saleReturnForm.invalid || isLoading || calculateTotal() <= 0">
+                  <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  {{ isLoading ? 'Processing...' : 'Process Return' }}
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Instructions -->
+          <div class="alert alert-info mt-4" *ngIf="itemsArray.length === 0">
+            <i class="feather icon-info"></i>
+            <strong>Instructions:</strong>
+            <ol class="mb-0 mt-2">
+              <li>Select the original invoice for which you want to process a return</li>
+              <li>Choose the reason for return</li>
+              <li>Enter the return quantities for applicable products</li>
+              <li>Review the return total and submit</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

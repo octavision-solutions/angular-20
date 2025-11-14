@@ -1,0 +1,205 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Stock Audit</h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="auditForm" (ngSubmit)="onSubmit()">
+            <!-- Audit Configuration -->
+            <div class="row mb-4">
+              <div class="col-md-4">
+                <label class="form-label">Audit Date *</label>
+                <input type="date" class="form-control" formControlName="auditDate" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Audit Type *</label>
+                <select class="form-control" formControlName="auditType" 
+                        (change)="onAuditTypeChange()" required>
+                  <option value="full">Full Stock Audit</option>
+                  <option value="selective">Selective Products</option>
+                </select>
+              </div>
+              <div class="col-md-4" *ngIf="auditForm.get('auditType')?.value === 'selective'">
+                <label class="form-label">Select Products *</label>
+                <select multiple class="form-control" formControlName="selectedProductIds" 
+                        (change)="onSelectedProductsChange()" style="height: 38px;">
+                  <option *ngFor="let product of products" [value]="product.productid">
+                    {{ product.product_name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div class="text-center my-4" *ngIf="isLoadingStock">
+              <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading stock data...</span>
+              </div>
+              <p class="mt-2">Loading stock data for audit...</p>
+            </div>
+
+            <!-- Audit Items -->
+            <div class="card mt-4" *ngIf="itemsArray.length > 0 && !isLoadingStock">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Stock Audit Items ({{ itemsArray.length }})</h6>
+                <div class="audit-summary" *ngIf="hasAdjustments()">
+                  <span class="badge bg-info me-2">
+                    {{ getTotalAdjustments().increases }} increases
+                  </span>
+                  <span class="badge bg-warning">
+                    {{ getTotalAdjustments().decreases }} decreases
+                  </span>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>System Stock</th>
+                        <th>Audited Stock *</th>
+                        <th>Difference</th>
+                        <th>Adjustment</th>
+                        <th>Reason</th>
+                      </tr>
+                    </thead>
+                    <tbody formArrayName="items">
+                      <tr *ngFor="let item of itemsArray.controls; let i = index" 
+                          [formGroupName]="i" 
+                          [class.table-warning]="isAdjustmentItem(i)">
+                        
+                        <td>
+                          <strong>{{ item.get('productName')?.value }}</strong>
+                          <input type="hidden" formControlName="productId">
+                          <input type="hidden" formControlName="productName">
+                        </td>
+                        
+                        <td>
+                          <span class="badge bg-primary">{{ item.get('currentStock')?.value }}</span>
+                          <input type="hidden" formControlName="currentStock">
+                        </td>
+                        
+                        <td>
+                          <input type="number" class="form-control audit-input" 
+                                 formControlName="auditedStock" 
+                                 min="0" (input)="onAuditedStockChange(i)" 
+                                 placeholder="Enter actual count">
+                        </td>
+                        
+                        <td>
+                          <span class="difference-badge" 
+                                [class.text-success]="(item.get('difference')?.value || 0) > 0"
+                                [class.text-danger]="(item.get('difference')?.value || 0) < 0"
+                                [class.text-muted]="(item.get('difference')?.value || 0) === 0">
+                            <strong>{{ item.get('difference')?.value || 0 }}</strong>
+                          </span>
+                        </td>
+                        
+                        <td>
+                          <span class="badge" 
+                                [class.bg-success]="item.get('adjustmentType')?.value === 'increase'"
+                                [class.bg-danger]="item.get('adjustmentType')?.value === 'decrease'"
+                                [class.bg-secondary]="item.get('adjustmentType')?.value === 'none'">
+                            {{ item.get('adjustmentType')?.value | titlecase }}
+                          </span>
+                        </td>
+                        
+                        <td>
+                          <select class="form-control reason-select" formControlName="reason" 
+                                  [class.is-invalid]="item.get('reason')?.invalid && item.get('reason')?.touched"
+                                  *ngIf="item.get('adjustmentType')?.value !== 'none'; else noReasonRequired">
+                            <option value="">Select reason</option>
+                            <option *ngFor="let reason of adjustmentReasons" [value]="reason">
+                              {{ reason }}
+                            </option>
+                          </select>
+                          <ng-template #noReasonRequired>
+                            <span class="text-muted">-</span>
+                          </ng-template>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Audit Summary -->
+            <div class="card mt-4" *ngIf="itemsArray.length > 0 && hasAdjustments()">
+              <div class="card-body">
+                <h6>Audit Summary</h6>
+                <div class="row">
+                  <div class="col-md-3">
+                    <div class="stat-card increase">
+                      <h4 class="text-success">+{{ getTotalAdjustments().increases }}</h4>
+                      <small>Stock Increases</small>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="stat-card decrease">
+                      <h4 class="text-danger">-{{ getTotalAdjustments().decreases }}</h4>
+                      <small>Stock Decreases</small>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="stat-card net">
+                      <h4 [class.text-success]="getTotalAdjustments().net >= 0" 
+                          [class.text-danger]="getTotalAdjustments().net < 0">
+                        {{ getTotalAdjustments().net >= 0 ? '+' : '' }}{{ getTotalAdjustments().net }}
+                      </h4>
+                      <small>Net Adjustment</small>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="form-group">
+                      <label class="form-label">Audit Notes</label>
+                      <textarea class="form-control" formControlName="notes" 
+                                rows="3" placeholder="Additional notes about this audit..."></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mt-4">
+              <div class="col-md-12 text-end">
+                <button type="button" class="btn btn-secondary me-2" (click)="cancel()">
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-primary" 
+                        [disabled]="auditForm.invalid || isLoading || itemsArray.length === 0">
+                  <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  {{ isLoading ? 'Processing...' : (hasAdjustments() ? 'Apply Adjustments' : 'Complete Audit') }}
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Instructions -->
+          <div class="alert alert-info mt-4" *ngIf="itemsArray.length === 0 && !isLoadingStock">
+            <i class="feather icon-info"></i>
+            <strong>Stock Audit Instructions:</strong>
+            <ol class="mb-0 mt-2">
+              <li>Select audit date and audit type (Full or Selective)</li>
+              <li>For selective audit, choose specific products to audit</li>
+              <li>Enter the actual physical count for each product</li>
+              <li>System will calculate differences automatically</li>
+              <li>Provide reasons for any adjustments</li>
+              <li>Review summary and complete the audit</li>
+            </ol>
+          </div>
+
+          <div class="alert alert-warning mt-3" *ngIf="itemsArray.length === 0 && !isLoadingStock">
+            <strong>Important:</strong> 
+            Stock adjustments will directly affect your inventory levels. 
+            Ensure physical counts are accurate before submitting.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

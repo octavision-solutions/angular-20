@@ -1,0 +1,29 @@
+<div class="container py-4">
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">My Profile</h5>
+      <p *ngIf="!currentUser">You are not signed in.</p>
+
+      <div *ngIf="currentUser">
+        <div class="d-flex align-items-center mb-3">
+          <img src="assets/images/user/avatar-1.jpg" alt="avatar" style="width:64px;height:64px;border-radius:50%" class="me-3" />
+          <div>
+            <h6 class="mb-0">{{ currentUser.salesmanname }}</h6>
+            <small class="text-muted">&#64;<span>{{ currentUser.username }}</span></small>
+          </div>
+        </div>
+
+        <ul class="list-group mb-3">
+          <li class="list-group-item"><strong>Salesman ID:</strong> {{ currentUser.salesmanid }}</li>
+          <li class="list-group-item"><strong>Authenticated:</strong> {{ currentUser.isAuthenticated }}</li>
+          <li class="list-group-item"><strong>Routes:</strong> {{ currentUser.routes.join(', ') }}</li>
+        </ul>
+
+        <div>
+          <a class="btn btn-primary me-2" routerLink="/dashboard/default">Go to Dashboard</a>
+          <a class="btn btn-outline-secondary" routerLink="/auth/signin">Sign out</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

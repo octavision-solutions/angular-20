@@ -1,0 +1,23 @@
+/* You can add global styles to this file, and also use other style files */
+
+@use 'scss/variables' as *;
+
+/* fonts-icon */
+@use 'scss/fonts/fontawesome/scss/fontawesome' as *;
+@use 'scss/fonts/feather/iconfont' as *;
+
+@use 'scss/mixins/function' as *;
+@use 'scss/general' as *;
+@use 'scss/generic' as *;
+
+/* important element */
+@use 'scss/menu/pc-footer' as *;
+@use 'scss/menu/menu-lite' as *;
+
+/* basic elements */
+@use 'scss/theme-elements/theme-elements' as *;
+
+/* third party modules style*/
+@use 'scss/plugins/plugins' as *;
+
+@use 'scss/custom' as *;

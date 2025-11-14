@@ -1,0 +1,585 @@
+<!-- Expense Management Module - Pakistani DMS -->
+<div class="expense-container">
+  <!-- Header Section -->
+  <div class="page-header mb-4">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h2 class="page-title">
+          <i class="feather icon-credit-card text-warning"></i>
+          Business Expenses - کاروباری اخراجات
+        </h2>
+        <p class="page-subtitle text-muted">Track and categorize your business expenses with detailed reporting</p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <div class="btn-group">
+          <button class="btn btn-outline-primary btn-sm me-2" (click)="refreshData()" [disabled]="isLoading">
+            <i class="feather icon-refresh-cw"></i> Refresh
+          </button>
+          <button class="btn btn-info btn-sm me-2" (click)="toggleView()">
+            <i class="feather" [class]="currentView === 'list' ? 'icon-grid' : 'icon-list'"></i>
+            {{ currentView === 'list' ? 'Card View' : 'List View' }}
+          </button>
+          <button class="btn btn-success btn-sm" (click)="exportData()">
+            <i class="feather icon-download"></i> Export
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div *ngIf="showSuccessMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="feather icon-check-circle"></i> {{ successMessage }}
+    <button type="button" class="btn-close" (click)="showSuccessMessage = false"></button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="feather icon-alert-circle"></i> {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+  </div>
+
+  <div class="row">
+    <!-- Expense Form -->
+    <div class="col-lg-8">
+      <div class="card expense-form">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="feather icon-plus"></i>
+            Record New Expense - نیا اخراج درج کریں
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="expenseForm" (ngSubmit)="addExpense()" *ngIf="!isLoading">
+            <div class="row">
+              <!-- Date -->
+              <div class="col-md-6 mb-3">
+                <label for="date" class="form-label required">Expense Date - اخراج کی تاریخ</label>
+                <input 
+                  type="date" 
+                  id="date"
+                  class="form-control"
+                  [class.is-invalid]="expenseForm.get('date')?.touched && expenseForm.get('date')?.invalid"
+                  formControlName="date"
+                >
+                <div *ngIf="expenseForm.get('date')?.touched && expenseForm.get('date')?.invalid" class="invalid-feedback">
+                  Please select expense date
+                </div>
+              </div>
+
+              <!-- Expense Category -->
+              <div class="col-md-6 mb-3">
+                <label for="category" class="form-label required">Expense Category - اخراج کی قسم</label>
+                <select 
+                  id="category"
+                  class="form-select"
+                  [class.is-invalid]="expenseForm.get('category')?.touched && expenseForm.get('category')?.invalid"
+                  formControlName="category"
+                  (change)="onCategoryChange()"
+                >
+                  <option value="">Select Category - قسم منتخب کریں</option>
+                  <option value="rent">Rent & Property - کرایہ اور جائیداد</option>
+                  <option value="utilities">Utilities - بجلی/گیس/پانی</option>
+                  <option value="transportation">Transportation - نقل و حمل</option>
+                  <option value="office_supplies">Office Supplies - دفتری سامان</option>
+                  <option value="communication">Communication - رابطہ</option>
+                  <option value="marketing">Marketing & Advertising - تشہیر</option>
+                  <option value="professional">Professional Services - پیشہ ورانہ خدمات</option>
+                  <option value="maintenance">Maintenance & Repair - مرمت</option>
+                  <option value="insurance">Insurance - انشورنس</option>
+                  <option value="legal">Legal & Compliance - قانونی</option>
+                  <option value="travel">Travel & Accommodation - سفر</option>
+                  <option value="entertainment">Business Entertainment - کاروباری تفریح</option>
+                  <option value="equipment">Equipment & Tools - آلات</option>
+                  <option value="training">Training & Development - تربیت</option>
+                  <option value="miscellaneous">Miscellaneous - متفرقات</option>
+                </select>
+                <div *ngIf="expenseForm.get('category')?.touched && expenseForm.get('category')?.invalid" class="invalid-feedback">
+                  Please select expense category
+                </div>
+              </div>
+
+              <!-- Subcategory -->
+              <div class="col-md-6 mb-3" *ngIf="subCategories.length > 0">
+                <label for="subCategory" class="form-label">Subcategory - ذیلی قسم</label>
+                <select 
+                  id="subCategory"
+                  class="form-select"
+                  formControlName="subCategory"
+                >
+                  <option value="">Select Subcategory - ذیلی قسم منتخب کریں</option>
+                  <option *ngFor="let sub of subCategories" [value]="sub.value">{{ sub.label }}</option>
+                </select>
+              </div>
+
+              <!-- Vendor/Payee -->
+              <div class="col-md-6 mb-3">
+                <label for="vendor" class="form-label required">Vendor/Payee - فروخت کنندہ</label>
+                <input 
+                  type="text" 
+                  id="vendor"
+                  class="form-control"
+                  [class.is-invalid]="expenseForm.get('vendor')?.touched && expenseForm.get('vendor')?.invalid"
+                  formControlName="vendor"
+                  placeholder="Enter vendor name - فروخت کنندہ کا نام"
+                  list="vendorsList"
+                >
+                <datalist id="vendorsList">
+                  <option *ngFor="let vendor of frequentVendors" [value]="vendor">
+                </datalist>
+                <div *ngIf="expenseForm.get('vendor')?.touched && expenseForm.get('vendor')?.invalid" class="invalid-feedback">
+                  Please enter vendor name
+                </div>
+              </div>
+
+              <!-- Amount -->
+              <div class="col-md-6 mb-3">
+                <label for="amount" class="form-label required">Amount - رقم (PKR)</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="feather icon-dollar-sign text-warning"></i>
+                  </span>
+                  <input 
+                    type="number" 
+                    id="amount"
+                    class="form-control"
+                    [class.is-invalid]="expenseForm.get('amount')?.touched && expenseForm.get('amount')?.invalid"
+                    formControlName="amount"
+                    placeholder="Enter amount - رقم درج کریں"
+                    min="0.01"
+                    step="0.01"
+                  >
+                  <span class="input-group-text">PKR</span>
+                  <div *ngIf="expenseForm.get('amount')?.touched && expenseForm.get('amount')?.invalid" class="invalid-feedback">
+                    Please enter a valid amount
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment Method -->
+              <div class="col-md-6 mb-3">
+                <label for="paymentMethod" class="form-label required">Payment Method - ادائیگی کا طریقہ</label>
+                <select 
+                  id="paymentMethod"
+                  class="form-select"
+                  [class.is-invalid]="expenseForm.get('paymentMethod')?.touched && expenseForm.get('paymentMethod')?.invalid"
+                  formControlName="paymentMethod"
+                >
+                  <option value="">Select Method - طریقہ منتخب کریں</option>
+                  <option value="cash">Cash - نقد</option>
+                  <option value="bank_transfer">Bank Transfer - بینک ٹرانسفر</option>
+                  <option value="cheque">Cheque - چیک</option>
+                  <option value="credit_card">Credit Card - کریڈٹ کارڈ</option>
+                  <option value="online">Online Payment - آن لائن</option>
+                </select>
+                <div *ngIf="expenseForm.get('paymentMethod')?.touched && expenseForm.get('paymentMethod')?.invalid" class="invalid-feedback">
+                  Please select payment method
+                </div>
+              </div>
+
+              <!-- Invoice/Receipt Number -->
+              <div class="col-md-6 mb-3">
+                <label for="invoiceNo" class="form-label">Invoice/Receipt No. - رسید نمبر</label>
+                <input 
+                  type="text" 
+                  id="invoiceNo"
+                  class="form-control"
+                  formControlName="invoiceNo"
+                  placeholder="Optional - اختیاری"
+                >
+              </div>
+
+              <!-- Tax Amount -->
+              <div class="col-md-6 mb-3">
+                <label for="taxAmount" class="form-label">Tax Amount - ٹیکس (PKR)</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="feather icon-percent text-info"></i>
+                  </span>
+                  <input 
+                    type="number" 
+                    id="taxAmount"
+                    class="form-control"
+                    formControlName="taxAmount"
+                    placeholder="Tax amount - ٹیکس کی رقم"
+                    min="0"
+                    step="0.01"
+                  >
+                  <span class="input-group-text">PKR</span>
+                </div>
+              </div>
+
+              <!-- Recurring Expense -->
+              <div class="col-md-6 mb-3">
+                <label for="isRecurring" class="form-label">Recurring Expense - دہرانے والا اخراج</label>
+                <div class="form-check form-switch">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    id="isRecurring"
+                    formControlName="isRecurring"
+                    (change)="onRecurringChange()"
+                  >
+                  <label class="form-check-label" for="isRecurring">
+                    This is a recurring expense - یہ دہرانے والا اخراج ہے
+                  </label>
+                </div>
+              </div>
+
+              <!-- Recurring Frequency -->
+              <div class="col-md-6 mb-3" *ngIf="expenseForm.get('isRecurring')?.value">
+                <label for="frequency" class="form-label">Frequency - تعدد</label>
+                <select 
+                  id="frequency"
+                  class="form-select"
+                  formControlName="frequency"
+                >
+                  <option value="monthly">Monthly - ماہانہ</option>
+                  <option value="quarterly">Quarterly - سہ ماہی</option>
+                  <option value="yearly">Yearly - سالانہ</option>
+                  <option value="weekly">Weekly - ہفتہ وار</option>
+                </select>
+              </div>
+
+              <!-- Description -->
+              <div class="col-12 mb-3">
+                <label for="description" class="form-label required">Description - تفصیلات</label>
+                <textarea 
+                  id="description"
+                  class="form-control"
+                  [class.is-invalid]="expenseForm.get('description')?.touched && expenseForm.get('description')?.invalid"
+                  formControlName="description"
+                  rows="2"
+                  placeholder="Expense description - اخراج کی تفصیلات"
+                ></textarea>
+                <div *ngIf="expenseForm.get('description')?.touched && expenseForm.get('description')?.invalid" class="invalid-feedback">
+                  Please enter expense description
+                </div>
+              </div>
+
+              <!-- Notes -->
+              <div class="col-12 mb-3">
+                <label for="notes" class="form-label">Additional Notes - اضافی نوٹس</label>
+                <textarea 
+                  id="notes"
+                  class="form-control"
+                  formControlName="notes"
+                  rows="2"
+                  placeholder="Any additional notes - کوئی اضافی نوٹس"
+                ></textarea>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="col-12">
+                <div class="d-flex gap-2">
+                  <button 
+                    type="submit" 
+                    class="btn btn-warning flex-fill"
+                    [disabled]="expenseForm.invalid || isProcessing"
+                  >
+                    <i class="feather icon-plus"></i>
+                    <span *ngIf="!isProcessing">Add Expense - اخراج شامل کریں</span>
+                    <span *ngIf="isProcessing">
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                      Processing...
+                    </span>
+                  </button>
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="clearForm()"
+                    [disabled]="isProcessing"
+                  >
+                    <i class="feather icon-refresh-cw"></i>
+                    Clear - صاف کریں
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <!-- Loading State -->
+          <div *ngIf="isLoading" class="text-center py-4">
+            <div class="spinner-border text-warning" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading expense form...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Panel -->
+    <div class="col-lg-4">
+      <div class="row">
+        <!-- Today's Summary -->
+        <div class="col-12 mb-3">
+          <div class="card summary-card">
+            <div class="card-body text-center">
+              <h6 class="card-title text-muted">Today's Expenses</h6>
+              <h3 class="text-warning">PKR {{ todaySummary.total | number:'1.2-2' }}</h3>
+              <small class="text-muted">{{ todaySummary.count }} expenses</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- This Month Summary -->
+        <div class="col-12 mb-3">
+          <div class="card summary-card">
+            <div class="card-body text-center">
+              <h6 class="card-title text-muted">This Month</h6>
+              <h4 class="text-warning">PKR {{ monthSummary.total | number:'1.2-2' }}</h4>
+              <small class="text-muted">{{ monthSummary.count }} expenses</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Categories -->
+        <div class="col-12 mb-3">
+          <div class="card">
+            <div class="card-header">
+              <h6 class="card-title mb-0">Top Categories - اہم اقسام</h6>
+            </div>
+            <div class="card-body">
+              <div *ngFor="let category of topCategories" class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge" [class]="getCategoryBadge(category.category)">
+                  {{ getCategoryLabel(category.category) }}
+                </span>
+                <strong class="text-warning">PKR {{ category.amount | number:'1.0-0' }}</strong>
+              </div>
+              <div *ngIf="topCategories.length === 0" class="text-center text-muted">
+                <small>No expenses recorded yet</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expense List/Cards -->
+  <div class="card mt-4" *ngIf="expenses.length > 0">
+    <div class="card-header">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <h5 class="card-title mb-0">
+            <i class="feather icon-list"></i>
+            Recent Expenses - حالیہ اخراجات
+          </h5>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <div class="input-group input-group-sm" style="max-width: 250px; margin-left: auto;">
+            <span class="input-group-text"><i class="feather icon-search"></i></span>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Search expenses..."
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="filterExpenses()"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <!-- List View -->
+      <div *ngIf="currentView === 'list'" class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Date - تاریخ</th>
+              <th>Category - قسم</th>
+              <th>Vendor - فروخت کنندہ</th>
+              <th>Amount - رقم</th>
+              <th>Method - طریقہ</th>
+              <th>Description - تفصیلات</th>
+              <th>Actions - اعمال</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let expense of filteredExpenses; trackBy: trackExpense" 
+                [class.table-warning]="showHighlight && expense === filteredExpenses[0]">
+              <td>
+                <small class="text-muted">{{ expense.date | date:'MMM dd, yyyy' }}</small>
+              </td>
+              <td>
+                <span class="badge" [class]="getCategoryBadge(expense.category)">
+                  {{ getCategoryLabel(expense.category) }}
+                </span>
+              </td>
+              <td>
+                <strong>{{ expense.vendor }}</strong>
+                <div *ngIf="expense.subCategory" class="text-muted small">{{ expense.subCategory }}</div>
+              </td>
+              <td>
+                <span class="text-warning fw-bold">PKR {{ expense.amount | number:'1.2-2' }}</span>
+                <div *ngIf="expense.taxAmount && expense.taxAmount > 0" class="text-muted small">
+                  +Tax: PKR {{ expense.taxAmount | number:'1.2-2' }}
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-info">{{ getPaymentMethodLabel(expense.paymentMethod) }}</span>
+                <div *ngIf="expense.isRecurring" class="text-success small">
+                  <i class="feather icon-repeat"></i> {{ expense.frequency }}
+                </div>
+              </td>
+              <td>
+                <span class="text-muted">{{ expense.description | slice:0:50 }}{{ expense.description.length > 50 ? '...' : '' }}</span>
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <button 
+                    class="btn btn-outline-primary btn-sm" 
+                    (click)="viewExpense(expense)"
+                    title="View Details"
+                  >
+                    <i class="feather icon-eye"></i>
+                  </button>
+                  <button 
+                    class="btn btn-outline-warning btn-sm" 
+                    (click)="editExpense(expense)"
+                    title="Edit Expense"
+                  >
+                    <i class="feather icon-edit"></i>
+                  </button>
+                  <button 
+                    class="btn btn-outline-danger btn-sm" 
+                    (click)="deleteExpense(expense)"
+                    title="Delete Expense"
+                  >
+                    <i class="feather icon-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Card View -->
+      <div *ngIf="currentView === 'card'" class="row">
+        <div class="col-md-6 col-xl-4 mb-3" *ngFor="let expense of filteredExpenses; trackBy: trackExpense">
+          <div class="card expense-card h-100" [class.border-warning]="showHighlight && expense === filteredExpenses[0]">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge" [class]="getCategoryBadge(expense.category)">
+                  {{ getCategoryLabel(expense.category) }}
+                </span>
+                <small class="text-muted">{{ expense.date | date:'MMM dd' }}</small>
+              </div>
+              <h6 class="card-title">{{ expense.vendor }}</h6>
+              <p class="card-text text-muted small">{{ expense.description | slice:0:80 }}...</p>
+              <div class="d-flex justify-content-between align-items-end">
+                <div>
+                  <h5 class="text-warning mb-0">PKR {{ expense.amount | number:'1.2-2' }}</h5>
+                  <small class="text-info">{{ getPaymentMethodLabel(expense.paymentMethod) }}</small>
+                </div>
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-outline-primary btn-sm" (click)="viewExpense(expense)">
+                    <i class="feather icon-eye"></i>
+                  </button>
+                  <button class="btn btn-outline-warning btn-sm" (click)="editExpense(expense)">
+                    <i class="feather icon-edit"></i>
+                  </button>
+                  <button class="btn btn-outline-danger btn-sm" (click)="deleteExpense(expense)">
+                    <i class="feather icon-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Expenses State -->
+  <div class="card mt-4" *ngIf="!isLoading && expenses.length === 0">
+    <div class="card-body text-center py-5">
+      <i class="feather icon-credit-card text-muted mb-3" style="font-size: 3rem;"></i>
+      <h5 class="text-muted">No expenses recorded yet</h5>
+      <p class="text-muted">Start by recording your first business expense above.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Expense Details Modal -->
+<div class="modal fade" *ngIf="selectedExpense" tabindex="-1" style="display: block;">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Expense Details - اخراج کی تفصیلات</h5>
+        <button type="button" class="btn-close" (click)="selectedExpense = null"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <strong>Date:</strong><br>
+            <span class="text-muted">{{ selectedExpense.date | date:'fullDate' }}</span>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Amount:</strong><br>
+            <span class="text-warning fw-bold">PKR {{ selectedExpense.amount | number:'1.2-2' }}</span>
+            <div *ngIf="selectedExpense.taxAmount && selectedExpense.taxAmount > 0" class="text-muted small">
+              Tax: PKR {{ selectedExpense.taxAmount | number:'1.2-2' }}
+            </div>
+          </div>
+        </div>
+        <hr>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <strong>Category:</strong><br>
+            <span class="badge" [class]="getCategoryBadge(selectedExpense.category)">
+              {{ getCategoryLabel(selectedExpense.category) }}
+            </span>
+            <div *ngIf="selectedExpense.subCategory" class="mt-1">
+              <small class="text-muted">{{ selectedExpense.subCategory }}</small>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <strong>Vendor:</strong><br>
+            <span class="text-muted">{{ selectedExpense.vendor }}</span>
+          </div>
+        </div>
+        <hr>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <strong>Payment Method:</strong><br>
+            <span class="badge bg-info">{{ getPaymentMethodLabel(selectedExpense.paymentMethod) }}</span>
+          </div>
+          <div class="col-md-6 mb-3" *ngIf="selectedExpense.invoiceNo">
+            <strong>Invoice/Receipt:</strong><br>
+            <span class="text-muted">{{ selectedExpense.invoiceNo }}</span>
+          </div>
+        </div>
+        <hr>
+        <div class="row" *ngIf="selectedExpense.isRecurring">
+          <div class="col-12 mb-3">
+            <strong>Recurring:</strong><br>
+            <span class="badge bg-success">
+              <i class="feather icon-repeat"></i> {{ selectedExpense.frequency }}
+            </span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12 mb-3">
+            <strong>Description:</strong><br>
+            <p class="text-muted">{{ selectedExpense.description }}</p>
+          </div>
+        </div>
+        <div class="row" *ngIf="selectedExpense.notes">
+          <div class="col-12">
+            <strong>Notes:</strong><br>
+            <p class="text-muted">{{ selectedExpense.notes }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-warning" (click)="editExpense(selectedExpense)">
+          <i class="feather icon-edit"></i> Edit
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="selectedExpense = null">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="selectedExpense" (click)="selectedExpense = null"></div>

@@ -1,0 +1,40 @@
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Node / Angular / Nx
+node_modules/
+dist/
+coverage/
+.angular/cache/
+.nx/cache/
+.nx/workspace-data/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files
+.env
+.env.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
+
+# Archives
+*.zip
+*.tar
+*.gz
+
+# Backend (CodeIgniter) ignores
+backend-api/vendor/
+backend-api/writable/
+backend-api/.env
+backend-api/public/uploads/

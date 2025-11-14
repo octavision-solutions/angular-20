@@ -1,0 +1,434 @@
+<!-- Cash Payment Module - Pakistani DMS -->
+<div class="cash-payment-container">
+  <!-- Header Section -->
+  <div class="page-header mb-4">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h2 class="page-title">
+          <i class="feather icon-upload text-danger"></i>
+          Cash Payment - نقد ادائیگی
+        </h2>
+        <p class="page-subtitle text-muted">Record cash payments for expenses, supplier payments, loans, etc.</p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <button class="btn btn-outline-primary btn-sm me-2" (click)="refreshData()" [disabled]="isLoading">
+          <i class="feather icon-refresh-cw"></i> Refresh
+        </button>
+        <button class="btn btn-success btn-sm" (click)="exportData()">
+          <i class="feather icon-download"></i> Export
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div *ngIf="showSuccessMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="feather icon-check-circle"></i> {{ successMessage }}
+    <button type="button" class="btn-close" (click)="showSuccessMessage = false"></button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="feather icon-alert-circle"></i> {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+  </div>
+
+  <div class="row">
+    <!-- Payment Form -->
+    <div class="col-lg-8">
+      <div class="card cash-payment-form">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="feather icon-edit"></i>
+            Record Cash Payment - نقد ادائیگی درج کریں
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="paymentForm" (ngSubmit)="addCashPayment()" *ngIf="!isLoading">
+            <div class="row">
+              <!-- Date -->
+              <div class="col-md-6 mb-3">
+                <label for="date" class="form-label required">Payment Date - ادائیگی کی تاریخ</label>
+                <input 
+                  type="date" 
+                  id="date"
+                  class="form-control"
+                  [class.is-invalid]="paymentForm.get('date')?.touched && paymentForm.get('date')?.invalid"
+                  formControlName="date"
+                >
+                <div *ngIf="paymentForm.get('date')?.touched && paymentForm.get('date')?.invalid" class="invalid-feedback">
+                  Please select payment date
+                </div>
+              </div>
+
+              <!-- Payment Type -->
+              <div class="col-md-6 mb-3">
+                <label for="paymentType" class="form-label required">Payment Type - ادائیگی کی قسم</label>
+                <select 
+                  id="paymentType"
+                  class="form-select"
+                  [class.is-invalid]="paymentForm.get('paymentType')?.touched && paymentForm.get('paymentType')?.invalid"
+                  formControlName="paymentType"
+                >
+                  <option value="">Select Payment Type - قسم منتخب کریں</option>
+                  <option value="supplier_payment">Supplier Payment - سپلائر ادائیگی</option>
+                  <option value="expense">Business Expense - کاروباری اخراجات</option>
+                  <option value="loan_payment">Loan Payment - قرض کی ادائیگی</option>
+                  <option value="advance_payment">Advance Payment - پیشگی ادائیگی</option>
+                  <option value="salary">Salary Payment - تنخواہ</option>
+                  <option value="rent">Rent Payment - کرایہ</option>
+                  <option value="utilities">Utilities - بجلی/گیس/پانی</option>
+                  <option value="transportation">Transportation - نقل و حمل</option>
+                  <option value="office_expense">Office Expense - دفتری اخراجات</option>
+                  <option value="miscellaneous">Miscellaneous - متفرقات</option>
+                </select>
+                <div *ngIf="paymentForm.get('paymentType')?.touched && paymentForm.get('paymentType')?.invalid" class="invalid-feedback">
+                  Please select payment type
+                </div>
+              </div>
+
+              <!-- Account Selection -->
+              <div class="col-md-6 mb-3">
+                <label for="accountId" class="form-label required">Pay To Account - اکاؤنٹ</label>
+                <select 
+                  id="accountId"
+                  class="form-select"
+                  [class.is-invalid]="paymentForm.get('accountId')?.touched && paymentForm.get('accountId')?.invalid"
+                  formControlName="accountId"
+                >
+                  <option value="">Select Account - اکاؤنٹ منتخب کریں</option>
+                  
+                  <!-- Supplier Accounts -->
+                  <optgroup label="Supplier Accounts - سپلائر اکاؤنٹس" *ngIf="supplierAccounts.length > 0">
+                    <option *ngFor="let account of supplierAccounts" [value]="account.account_id">
+                      {{ account.account_name }}
+                    </option>
+                  </optgroup>
+
+                  <!-- Expense Accounts -->
+                  <optgroup label="Expense Accounts - اخراجاتی اکاؤنٹس" *ngIf="expenseAccounts.length > 0">
+                    <option *ngFor="let account of expenseAccounts" [value]="account.account_id">
+                      {{ account.account_name }}
+                    </option>
+                  </optgroup>
+
+                  <!-- Liability Accounts -->
+                  <optgroup label="Liability Accounts - ذمہ داری اکاؤنٹس" *ngIf="liabilityAccounts.length > 0">
+                    <option *ngFor="let account of liabilityAccounts" [value]="account.account_id">
+                      {{ account.account_name }}
+                    </option>
+                  </optgroup>
+                </select>
+                <div *ngIf="paymentForm.get('accountId')?.touched && paymentForm.get('accountId')?.invalid" class="invalid-feedback">
+                  Please select an account
+                </div>
+              </div>
+
+              <!-- Amount -->
+              <div class="col-md-6 mb-3">
+                <label for="amount" class="form-label required">Amount - رقم (PKR)</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="feather icon-dollar-sign text-danger"></i>
+                  </span>
+                  <input 
+                    type="number" 
+                    id="amount"
+                    class="form-control"
+                    [class.is-invalid]="paymentForm.get('amount')?.touched && paymentForm.get('amount')?.invalid"
+                    formControlName="amount"
+                    placeholder="Enter amount - رقم درج کریں"
+                    min="0.01"
+                    step="0.01"
+                  >
+                  <span class="input-group-text">PKR</span>
+                  <div *ngIf="paymentForm.get('amount')?.touched && paymentForm.get('amount')?.invalid" class="invalid-feedback">
+                    Please enter a valid amount
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reference Number -->
+              <div class="col-md-6 mb-3">
+                <label for="referenceNo" class="form-label">Reference No. - حوالہ نمبر</label>
+                <input 
+                  type="text" 
+                  id="referenceNo"
+                  class="form-control"
+                  formControlName="referenceNo"
+                  placeholder="Optional - اختیاری"
+                >
+              </div>
+
+              <!-- Payment Method -->
+              <div class="col-md-6 mb-3">
+                <label for="paymentMethod" class="form-label required">Payment Method - ادائیگی کا طریقہ</label>
+                <select 
+                  id="paymentMethod"
+                  class="form-select"
+                  [class.is-invalid]="paymentForm.get('paymentMethod')?.touched && paymentForm.get('paymentMethod')?.invalid"
+                  formControlName="paymentMethod"
+                >
+                  <option value="">Select Method - طریقہ منتخب کریں</option>
+                  <option value="cash">Cash - نقد</option>
+                  <option value="bank_transfer">Bank Transfer - بینک ٹرانسفر</option>
+                  <option value="cheque">Cheque - چیک</option>
+                  <option value="online">Online Payment - آن لائن</option>
+                </select>
+                <div *ngIf="paymentForm.get('paymentMethod')?.touched && paymentForm.get('paymentMethod')?.invalid" class="invalid-feedback">
+                  Please select payment method
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="col-12 mb-3">
+                <label for="description" class="form-label required">Description - تفصیلات</label>
+                <textarea 
+                  id="description"
+                  class="form-control"
+                  [class.is-invalid]="paymentForm.get('description')?.touched && paymentForm.get('description')?.invalid"
+                  formControlName="description"
+                  rows="2"
+                  placeholder="Payment description - ادائیگی کی تفصیلات"
+                ></textarea>
+                <div *ngIf="paymentForm.get('description')?.touched && paymentForm.get('description')?.invalid" class="invalid-feedback">
+                  Please enter payment description
+                </div>
+              </div>
+
+              <!-- Notes -->
+              <div class="col-12 mb-3">
+                <label for="notes" class="form-label">Additional Notes - اضافی نوٹس</label>
+                <textarea 
+                  id="notes"
+                  class="form-control"
+                  formControlName="notes"
+                  rows="2"
+                  placeholder="Any additional notes - کوئی اضافی نوٹس"
+                ></textarea>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="col-12">
+                <div class="d-flex gap-2">
+                  <button 
+                    type="submit" 
+                    class="btn btn-danger flex-fill"
+                    [disabled]="paymentForm.invalid || isProcessing"
+                  >
+                    <i class="feather icon-upload"></i>
+                    <span *ngIf="!isProcessing">Record Payment - ادائیگی درج کریں</span>
+                    <span *ngIf="isProcessing">
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                      Processing...
+                    </span>
+                  </button>
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary"
+                    (click)="clearForm()"
+                    [disabled]="isProcessing"
+                  >
+                    <i class="feather icon-refresh-cw"></i>
+                    Clear - صاف کریں
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <!-- Loading State -->
+          <div *ngIf="isLoading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading payment form...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Summary -->
+    <div class="col-lg-4">
+      <div class="row">
+        <!-- Summary Cards -->
+        <div class="col-12 mb-3">
+          <div class="card summary-card">
+            <div class="card-body text-center">
+              <h6 class="card-title text-muted">Today's Total Payments</h6>
+              <h3 class="text-danger">PKR {{ todaySummary.total | number:'1.2-2' }}</h3>
+              <small class="text-muted">{{ todaySummary.count }} payments</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 mb-3">
+          <div class="card summary-card">
+            <div class="card-body text-center">
+              <h6 class="card-title text-muted">Largest</h6>
+              <h5 class="text-danger">PKR {{ todaySummary.largest | number:'1.2-2' }}</h5>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 mb-3">
+          <div class="card summary-card">
+            <div class="card-body text-center">
+              <h6 class="card-title text-muted">Average</h6>
+              <h5 class="text-danger">PKR {{ todaySummary.average | number:'1.2-2' }}</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Payments -->
+  <div class="card mt-4" *ngIf="recentPayments.length > 0">
+    <div class="card-header">
+      <h5 class="card-title mb-0">
+        <i class="feather icon-list"></i>
+        Today's Recent Payments - آج کی حالیہ ادائیگیاں
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Time - وقت</th>
+              <th>Account - اکاؤنٹ</th>
+              <th>Type - قسم</th>
+              <th>Amount - رقم</th>
+              <th>Method - طریقہ</th>
+              <th>Description - تفصیلات</th>
+              <th>Actions - اعمال</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let payment of recentPayments; trackBy: trackPayment" 
+                [class.table-warning]="showHighlight && payment === recentPayments[0]">
+              <td>
+                <small class="text-muted">{{ payment.date | date:'shortTime' }}</small>
+              </td>
+              <td>
+                <strong>{{ payment.account_name }}</strong>
+              </td>
+              <td>
+                <span class="badge" [class]="getPaymentTypeBadge(payment.payment_type)">
+                  {{ getPaymentTypeLabel(payment.payment_type) }}
+                </span>
+              </td>
+              <td>
+                <span class="text-danger fw-bold">PKR {{ payment.debit | number:'1.2-2' }}</span>
+              </td>
+              <td>
+                <span class="badge bg-info">{{ getPaymentMethodLabel(payment.payment_method) }}</span>
+              </td>
+              <td>
+                <small class="text-muted">{{ payment.description }}</small>
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <button 
+                    class="btn btn-outline-primary btn-sm" 
+                    (click)="viewPayment(payment)"
+                    title="View Details"
+                  >
+                    <i class="feather icon-eye"></i>
+                  </button>
+                  <button 
+                    class="btn btn-outline-warning btn-sm" 
+                    (click)="editPayment(payment)"
+                    title="Edit Payment"
+                  >
+                    <i class="feather icon-edit"></i>
+                  </button>
+                  <button 
+                    class="btn btn-outline-danger btn-sm" 
+                    (click)="deletePayment(payment)"
+                    title="Delete Payment"
+                  >
+                    <i class="feather icon-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Payments State -->
+  <div class="card mt-4" *ngIf="!isLoading && recentPayments.length === 0">
+    <div class="card-body text-center py-5">
+      <i class="feather icon-upload text-muted mb-3" style="font-size: 3rem;"></i>
+      <h5 class="text-muted">No payments recorded today</h5>
+      <p class="text-muted">Start by recording your first cash payment above.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Details Modal -->
+<div class="modal fade" *ngIf="selectedPayment" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Payment Details - ادائیگی کی تفصیلات</h5>
+        <button type="button" class="btn-close" (click)="selectedPayment = null"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-6">
+            <strong>Date:</strong><br>
+            <span class="text-muted">{{ selectedPayment.date | date:'medium' }}</span>
+          </div>
+          <div class="col-6">
+            <strong>Amount:</strong><br>
+            <span class="text-danger fw-bold">PKR {{ selectedPayment.debit | number:'1.2-2' }}</span>
+          </div>
+        </div>
+        <hr>
+        <div class="row">
+          <div class="col-6">
+            <strong>Account:</strong><br>
+            <span class="text-muted">{{ selectedPayment.account_name }}</span>
+          </div>
+          <div class="col-6">
+            <strong>Type:</strong><br>
+            <span class="badge" [class]="getPaymentTypeBadge(selectedPayment.payment_type)">
+              {{ getPaymentTypeLabel(selectedPayment.payment_type) }}
+            </span>
+          </div>
+        </div>
+        <hr>
+        <div class="row">
+          <div class="col-6">
+            <strong>Method:</strong><br>
+            <span class="badge bg-info">{{ getPaymentMethodLabel(selectedPayment.payment_method) }}</span>
+          </div>
+          <div class="col-6" *ngIf="selectedPayment.reference_no">
+            <strong>Reference:</strong><br>
+            <span class="text-muted">{{ selectedPayment.reference_no }}</span>
+          </div>
+        </div>
+        <hr>
+        <div class="row">
+          <div class="col-12">
+            <strong>Description:</strong><br>
+            <p class="text-muted">{{ selectedPayment.description }}</p>
+          </div>
+        </div>
+        <div class="row" *ngIf="selectedPayment.notes">
+          <div class="col-12">
+            <strong>Notes:</strong><br>
+            <p class="text-muted">{{ selectedPayment.notes }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="selectedPayment = null">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,170 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Purchase Return</h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="purchaseReturnForm" (ngSubmit)="onSubmit()">
+            <!-- Original Purchase Selection -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Original Purchase Invoice *</label>
+                <select class="form-control" formControlName="originalPurchaseId" 
+                        (change)="onOriginalPurchaseChange()" required>
+                  <option value="">Select Original Purchase</option>
+                  <option *ngFor="let purchase of originalPurchases" [value]="purchase.invoiceid">
+                    Invoice #{{ purchase.inv_no }} - {{ purchase.date | date:'shortDate' }} 
+                    - {{ purchase.net_amount | currency:'PKR':'symbol':'1.2-2' }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Return Reason *</label>
+                <select class="form-control" formControlName="returnReason" required>
+                  <option value="">Select Reason</option>
+                  <option value="Damaged in Transit">Damaged in Transit</option>
+                  <option value="Wrong Product Delivered">Wrong Product Delivered</option>
+                  <option value="Expired Product">Expired Product</option>
+                  <option value="Quality Issue">Quality Issue</option>
+                  <option value="Overstock">Overstock</option>
+                  <option value="Supplier Agreement">Supplier Agreement</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Supplier Name</label>
+                <input type="text" class="form-control" formControlName="supplierName" readonly>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Return Invoice Number *</label>
+                <input type="text" class="form-control" formControlName="returnInvoiceNumber" 
+                       placeholder="Enter return invoice number" required>
+              </div>
+            </div>
+
+            <!-- Items Section -->
+            <div class="card mt-4" *ngIf="itemsArray.length > 0">
+              <div class="card-header">
+                <h6 class="mb-0">Return Items</h6>
+                <small class="text-muted">Note: Stock availability will be checked for returns</small>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>Original Qty</th>
+                        <th>Return Qty *</th>
+                        <th>Purchase Rate</th>
+                        <th>Sale Rate</th>
+                        <th>Return Total</th>
+                      </tr>
+                    </thead>
+                    <tbody formArrayName="items">
+                      <tr *ngFor="let item of itemsArray.controls; let i = index" [formGroupName]="i">
+                        <td>
+                          <input type="hidden" formControlName="productId">
+                          <strong>{{ getProductName(item.get('productId')?.value) }}</strong>
+                        </td>
+                        <td>
+                          <span class="badge bg-success">{{ item.get('originalQuantity')?.value }}</span>
+                        </td>
+                        <td>
+                          <input type="number" class="form-control" formControlName="returnQuantity" 
+                                 [max]="item.get('originalQuantity')?.value"
+                                 min="0" (input)="onReturnQuantityChange(i)" style="width: 80px;">
+                        </td>
+                        <td>
+                          <span class="text-danger">{{ item.get('purchaseRate')?.value | currency:'PKR':'symbol':'1.2-2' }}</span>
+                          <input type="hidden" formControlName="purchaseRate">
+                        </td>
+                        <td>
+                          <span class="text-primary">{{ item.get('saleRate')?.value | currency:'PKR':'symbol':'1.2-2' }}</span>
+                          <input type="hidden" formControlName="saleRate">
+                        </td>
+                        <td>
+                          <strong class="text-danger">{{ (item.get('returnQuantity')?.value || 0) * (item.get('purchaseRate')?.value || 0) | currency:'PKR':'symbol':'1.2-2' }}</strong>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="card mt-4" *ngIf="itemsArray.length > 0">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label">Discount (%)</label>
+                      <input type="number" class="form-control" formControlName="discount" 
+                             min="0" max="100" step="0.01">
+                      <small class="text-muted">Any additional discount from supplier</small>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <table class="table table-sm">
+                      <tr>
+                        <td><strong>Sub Total:</strong></td>
+                        <td class="text-end text-danger">{{ calculateSubTotal() | currency:'PKR':'symbol':'1.2-2' }}</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Discount:</strong></td>
+                        <td class="text-end text-success">{{ calculateDiscountAmount() | currency:'PKR':'symbol':'1.2-2' }}</td>
+                      </tr>
+                      <tr class="table-danger">
+                        <td><strong>Return Total:</strong></td>
+                        <td class="text-end"><strong>{{ calculateTotal() | currency:'PKR':'symbol':'1.2-2' }}</strong></td>
+                      </tr>
+                    </table>
+                    <small class="text-muted">Amount to be credited back to account</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mt-4">
+              <div class="col-md-12 text-end">
+                <button type="button" class="btn btn-secondary me-2" (click)="cancel()">
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-danger" 
+                        [disabled]="purchaseReturnForm.invalid || isLoading || calculateTotal() <= 0">
+                  <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  {{ isLoading ? 'Processing...' : 'Process Return' }}
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Instructions -->
+          <div class="alert alert-warning mt-4" *ngIf="itemsArray.length === 0">
+            <i class="feather icon-alert-triangle"></i>
+            <strong>Purchase Return Instructions:</strong>
+            <ol class="mb-0 mt-2">
+              <li>Select the original purchase invoice for which you want to process a return</li>
+              <li>Choose the appropriate reason for return</li>
+              <li>Enter a return invoice number provided by supplier</li>
+              <li>Enter the return quantities for applicable products</li>
+              <li><strong>Note:</strong> Stock availability will be verified before processing</li>
+              <li>Review the return total and submit</li>
+            </ol>
+          </div>
+
+          <div class="alert alert-info mt-3" *ngIf="itemsArray.length === 0">
+            <strong>Stock Impact:</strong> Returned items will be deducted from your current stock using FIFO method.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

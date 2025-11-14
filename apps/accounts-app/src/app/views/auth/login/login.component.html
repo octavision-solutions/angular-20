@@ -1,0 +1,152 @@
+<div class="login-page">
+  <c-container fluid class="min-vh-100 d-flex align-items-center justify-content-center">
+    <c-row class="justify-content-center w-100">
+      <c-col md="8" lg="6" xl="4">
+        <c-card class="shadow-lg border-0">
+          <c-card-body class="p-4">
+            <!-- Logo and Title -->
+            <div class="text-center mb-4">
+              <div class="mb-3">
+                <svg cIcon name="cil-bank" size="3xl" class="text-primary"></svg>
+              </div>
+              <h3 class="fw-bold text-primary">Accounting System</h3>
+              <p class="text-muted">Sign in to your account</p>
+            </div>
+
+            <!-- Error Alert -->
+            <c-alert 
+              *ngIf="error" 
+              color="danger" 
+              [dismissible]="true"
+              (visibleChange)="error = ''"
+            >
+              <svg cIcon name="cil-warning" class="me-2"></svg>
+              {{ error }}
+            </c-alert>
+
+            <!-- Login Form -->
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+              <!-- Username Field -->
+              <div class="mb-3">
+                <label cLabel for="username" class="form-label">Username</label>
+                <div class="input-group">
+                  <span cInputGroupText>
+                    <svg cIcon name="cil-user"></svg>
+                  </span>
+                  <input
+                    cFormControl
+                    type="text"
+                    id="username"
+                    formControlName="username"
+                    placeholder="username@tenantid (e.g., admin@123456)"
+                    autocomplete="username"
+                  />
+                </div>
+                <div *ngIf="isFieldInvalid('username')" class="invalid-feedback d-block">
+                  {{ getFieldError('username') }}
+                </div>
+                <small class="form-text text-muted">
+                  Format: username@tenantid (6 digits)
+                </small>
+              </div>
+
+              <!-- Password Field -->
+              <div class="mb-3">
+                <label cLabel for="password" class="form-label">Password</label>
+                <div class="input-group">
+                  <span cInputGroupText>
+                    <svg cIcon name="cil-lock-locked"></svg>
+                  </span>
+                  <input
+                    cFormControl
+                    type="password"
+                    id="password"
+                    formControlName="password"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                  />
+                </div>
+                <div *ngIf="isFieldInvalid('password')" class="invalid-feedback d-block">
+                  {{ getFieldError('password') }}
+                </div>
+              </div>
+
+              <!-- Remember Me -->
+              <div class="mb-3">
+                <div class="form-check">
+                  <input
+                    cFormCheck
+                    type="checkbox"
+                    id="rememberMe"
+                    formControlName="rememberMe"
+                  />
+                  <label cFormCheckLabel for="rememberMe">
+                    Remember me
+                  </label>
+                </div>
+              </div>
+
+              <!-- Login Button -->
+              <div class="d-grid mb-3">
+                <button
+                  cButton
+                  type="submit"
+                  color="primary"
+                  size="lg"
+                  [disabled]="loading || loginForm.invalid"
+                >
+                  <c-spinner *ngIf="loading" size="sm" class="me-2"></c-spinner>
+                  <svg *ngIf="!loading" cIcon name="cil-account-logout" class="me-2"></svg>
+                  {{ loading ? 'Signing in...' : 'Sign In' }}
+                </button>
+              </div>
+            </form>
+
+            <!-- Demo Credentials -->
+            <div class="demo-credentials">
+              <hr class="my-4">
+              <h6 class="text-center text-muted mb-3">Demo Accounts</h6>
+              <div class="row">
+                <div *ngFor="let demo of demoCredentials" class="col-6 mb-2">
+                  <button
+                    type="button"
+                    class="btn btn-outline-info btn-sm w-100"
+                    (click)="useDemoCredentials(demo)"
+                    [disabled]="loading"
+                  >
+                    {{ demo.role }}
+                  </button>
+                </div>
+              </div>
+              <p class="text-muted text-center mt-2" style="font-size: 0.85em;">
+                Click any role to auto-fill credentials
+              </p>
+            </div>
+
+            <!-- Footer Links -->
+            <div class="text-center mt-4">
+              <p class="text-muted">
+                Don't have an account? 
+                <a routerLink="/register" class="text-decoration-none">
+                  Create New Tenant
+                </a>
+              </p>
+              <p class="text-muted">
+                <a href="#" class="text-decoration-none text-muted">
+                  Forgot Password?
+                </a>
+              </p>
+            </div>
+          </c-card-body>
+        </c-card>
+
+        <!-- Version Info -->
+        <div class="text-center mt-3">
+          <small class="text-muted">
+            Multi-Tenant Accounting System v1.0.0
+          </small>
+        </div>
+      </c-col>
+    </c-row>
+  </c-container>
+</div>

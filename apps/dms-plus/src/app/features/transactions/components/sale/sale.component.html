@@ -1,0 +1,165 @@
+<div class="container-fluid sale-form">
+  <div class="row mb-3">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex gap-3 align-items-end flex-wrap">
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-control" [ngModel]="invoiceDate" (ngModelChange)="onDateChange($event)">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Salesman</label>
+              <select class="form-control" [(ngModel)]="selectedSalesmanId">
+                <option value="">-- Select Salesman --</option>
+                <option *ngFor="let s of salesmen" [value]="s.salesmanid">{{ s.salesmanname }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Route</label>
+              <select class="form-control" [(ngModel)]="selectedRouteId" (ngModelChange)="onRouteChange($event)">
+                <option value="">-- Select Route --</option>
+                <option *ngFor="let route of routes" [value]="route.routeid">{{ route.routename }}</option>
+              </select>
+            </div>
+
+            <div class="form-group flex-fill">
+              <label class="form-label">Customer</label>
+              <select class="form-control" [(ngModel)]="selectedCustomerId" (ngModelChange)="onCustomerChange($event)">
+                <option value="">-- Select Customer --</option>
+                <option *ngFor="let c of filteredCustomers" [value]="c.account_id">{{ c.account_name }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h6 class="mb-0">Products</h6>
+        </div>
+        <div class="card-body">
+          <ui-search-list
+            #productList
+            [items]="products"
+            [(query)]="productSearch"
+            [filterKeys]="['product_name', 'code', 'unit']"
+            placeholder="Search products..."
+            (itemSelected)="selectProduct($event)"
+          >
+            <ng-template searchItemTemplate let-item>
+              <div class="product-item d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <div class="fw-bold">{{ item.product_name }}</div>
+                  <small class="text-muted">{{ item.unit || '' }} • {{ item.companyid }}</small>
+                </div>
+               
+              </div>
+            </ng-template>
+            <ng-template searchEmptyTemplate>
+              <div class="text-muted small">No products match "{{ productSearch }}"</div>
+            </ng-template>
+          </ui-search-list>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <form [formGroup]="saleForm" (ngSubmit)="onSubmit()">
+        <div class="card mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Add Item</h6>
+            <small class="text-muted">Select product then fill fields and press Enter</small>
+          </div>
+          <div class="card-body">
+            <div class="row compact-row g-1 align-items-end" (keydown.enter)="addCurrentItem(); $event.preventDefault()">
+              <div class="col-md-1">
+                <label class="form-label">Qty</label>
+                <input #qtyInput type="number" class="form-control compact" formControlName="quantity" (input)="onQuantityOrRateChange()">
+              </div>
+              <div class="col-md-1">
+                <label class="form-label">Bonus</label>
+                <input type="number" class="form-control compact" formControlName="bonus" (input)="onQuantityOrRateChange()">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Price</label>
+                <input type="number" class="form-control compact" formControlName="rate" (input)="onQuantityOrRateChange()">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Disc %</label>
+                <input type="number" class="form-control compact" formControlName="disc_percent" (input)="onQuantityOrRateChange()">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Disc Rs</label>
+                <input type="number" class="form-control compact" formControlName="disc_amount" readonly>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Net</label>
+                <input type="number" class="form-control compact" formControlName="net_amount" readonly>
+              </div>
+              <div class="col-md-2 d-flex">
+                <button type="button" class="btn btn-sm btn-primary w-100" (click)="addCurrentItem()" [disabled]="saleForm.get('productId')?.invalid || saleForm.get('quantity')?.invalid || saleForm.get('rate')?.invalid">Add</button>
+              </div>
+            </div>
+            <div class="mt-1 small text-danger" *ngIf="saleForm.get('productId')?.invalid && saleForm.get('productId')?.touched">Product required</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th class="text-end">Qty</th>
+                    <th class="text-end">Price</th>
+                    <th class="text-end">Disc</th>
+                    <th class="text-end">Net</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let it of items; let idx = index">
+                    <td>{{ getProductName(it.productId) }}</td>
+                    <td class="text-end">{{ it.quantity || 0 }}</td>
+                    <td class="text-end">{{ it.rate || 0 | number:'1.2-2' }}</td>
+                    <td class="text-end">{{ it.disc_amount || 0 | number:'1.2-2' }}</td>
+                    <td class="text-end">{{ it.net_amount || 0 | number:'1.2-2' }}</td>
+                    <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" (click)="removeItem(idx)">
+                      <i class="fa fa-trash"></i>
+
+                    </button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <div>
+                <label class="form-label">Discount (%)</label>
+                <input type="number" class="form-control d-inline-block" style="width:120px" formControlName="discount">
+              </div>
+              <div class="text-end">
+                <div>Sub Total: <strong>{{ calculateSubTotal() | number:'1.2-2' }}</strong></div>
+                <div>Discount: <strong>{{ calculateDiscountAmount() | number:'1.2-2' }}</strong></div>
+                <div class="h5">Total: <strong>{{ calculateTotal() | number:'1.2-2' }}</strong></div>
+                <div class="mt-2">
+                  <button type="button" class="btn btn-secondary me-2" (click)="cancel()">Cancel</button>
+                  <button type="submit" class="btn btn-success me-2" [disabled]="saleForm.invalid || isLoading || calculateTotal() <= 0">{{ isLoading ? 'Processing...' : 'Save' }}</button>
+                  <button type="button" class="btn btn-primary" (click)="saveAndPrint()">Save & Print</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

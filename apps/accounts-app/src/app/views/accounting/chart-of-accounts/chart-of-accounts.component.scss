@@ -1,0 +1,137 @@
+.table-header {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.table-row {
+  &:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+  }
+}
+
+.financial-amount {
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.account-code {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  background-color: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.form-group {
+  label {
+    font-weight: 500;
+    margin-bottom: 4px;
+    display: block;
+  }
+}
+
+.d-flex.gap-1 {
+  gap: 0.25rem;
+}
+
+.d-flex.gap-2 {
+  gap: 0.5rem;
+}
+
+.btn-group {
+  .btn {
+    border-radius: 4px;
+    
+    &:not(:last-child) {
+      margin-right: 4px;
+    }
+  }
+}
+
+.account-hierarchy {
+  &.level-1 {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #2e3440;
+  }
+  
+  &.level-2 {
+    font-weight: 600;
+    color: #434c5e;
+  }
+  
+  &.level-3 {
+    font-weight: normal;
+    color: #5e81ac;
+  }
+  
+  &.level-4 {
+    font-weight: normal;
+    font-style: italic;
+    color: #81a1c1;
+  }
+}
+
+// Additional level-specific styles for account names
+.level-1 {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: #2e3440;
+}
+
+.level-2 {
+  font-weight: 600;
+  color: #434c5e;
+}
+
+.level-3 {
+  font-weight: 500;
+  color: #5e81ac;
+}
+
+.level-4 {
+  font-weight: normal;
+  color: #81a1c1;
+}
+
+// Loading states
+.loading-overlay {
+  position: relative;
+}
+
+// Account type color coding
+.type-asset { color: #198754; }
+.type-liability { color: #dc3545; }
+.type-equity { color: #0dcaf0; }
+.type-revenue { color: #0d6efd; }
+.type-expense { color: #fd7e14; }
+
+// Status indicators
+.status-active { color: #198754; }
+.status-inactive { color: #6c757d; }
+
+.modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+@media (max-width: 768px) {
+  .d-flex.gap-2 {
+    flex-direction: column;
+    
+    .btn {
+      width: 100%;
+      margin-bottom: 0.25rem;
+    }
+  }
+  
+  .table-responsive {
+    font-size: 0.9em;
+  }
+}

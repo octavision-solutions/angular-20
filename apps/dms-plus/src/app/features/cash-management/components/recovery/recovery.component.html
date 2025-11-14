@@ -1,0 +1,330 @@
+<div class="container-fluid">
+  <div class="row">
+    <!-- Header Section -->
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h4 class="mb-0">
+                <i class="fas fa-money-bill-wave me-2"></i>
+                Recovery Management - وصولی منظوری
+              </h4>
+              <p class="mb-0 text-light">Customer Payment Collection System</p>
+            </div>
+            <div class="col-md-4 text-end">
+              <button 
+                class="btn btn-light btn-sm me-2"
+                (click)="refreshData()"
+                [disabled]="isLoading">
+                <i class="fas fa-sync-alt me-1"></i>Refresh
+              </button>
+              <button 
+                class="btn btn-warning btn-sm"
+                (click)="showSummaryModal()">
+                <i class="fas fa-chart-bar me-1"></i>Summary
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="card-body">
+          <form [formGroup]="filterForm" class="row g-3">
+            <!-- Route Selection -->
+            <div class="col-md-3">
+              <label class="form-label fw-bold">Route - روٹ</label>
+              <select 
+                class="form-select" 
+                formControlName="routeId"
+                (change)="onRouteChange()">
+                <option value="">All Routes</option>
+                <option *ngFor="let route of routes" [value]="route.routeid">
+                  {{route.routename}}
+                </option>
+              </select>
+            </div>
+
+            <!-- Customer Selection -->
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Customer - کسٹمر</label>
+              <select 
+                class="form-select" 
+                formControlName="customerId"
+                (change)="onCustomerChange()">
+                <option value="">All Customers</option>
+                <option *ngFor="let customer of filteredCustomers" [value]="customer.account_id">
+                  {{customer.account_name}} 
+                  <span *ngIf="customer.outstanding_balance > 0" class="text-danger">
+                    (Outstanding: ₨{{customer.outstanding_balance | number:'1.2-2'}})
+                  </span>
+                </option>
+              </select>
+            </div>
+
+            <!-- Date Range -->
+            <div class="col-md-3">
+              <label class="form-label fw-bold">Date - تاریخ</label>
+              <input 
+                type="date" 
+                class="form-control" 
+                formControlName="filterDate"
+                [value]="today"
+                (change)="loadOutstandingInvoices()">
+            </div>
+
+            <!-- Search Button -->
+            <div class="col-md-2">
+              <label class="form-label">&nbsp;</label>
+              <button 
+                type="button"
+                class="btn btn-primary w-100"
+                (click)="loadOutstandingInvoices()"
+                [disabled]="isLoading">
+                <i class="fas fa-search me-1"></i>Search
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outstanding Invoices Section -->
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-file-invoice-dollar me-2"></i>
+            Outstanding Invoices - بقایا انوائسز
+          </h5>
+        </div>
+        <div class="card-body">
+          <div *ngIf="isLoading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading outstanding invoices...</p>
+          </div>
+
+          <div *ngIf="!isLoading && outstandingInvoices.length === 0" class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Outstanding Invoices</h5>
+            <p class="text-muted">No pending invoices found for selected criteria</p>
+          </div>
+
+          <div *ngIf="!isLoading && outstandingInvoices.length > 0" class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-dark">
+                <tr>
+                  <th width="10%">
+                    <input 
+                      type="checkbox" 
+                      class="form-check-input"
+                      [checked]="allInvoicesSelected"
+                      (change)="toggleAllInvoices($event)">
+                  </th>
+                  <th>Invoice#</th>
+                  <th>Date</th>
+                  <th>Customer</th>
+                  <th>Amount</th>
+                  <th>Outstanding</th>
+                  <th>Days</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr 
+                  *ngFor="let invoice of outstandingInvoices" 
+                  [class.table-warning]="getDaysOutstanding(invoice.date) > 30"
+                  [class.table-danger]="getDaysOutstanding(invoice.date) > 60">
+                  <td>
+                    <input 
+                      type="checkbox" 
+                      class="form-check-input"
+                      [checked]="invoice.selected"
+                      (change)="toggleInvoiceSelection(invoice)">
+                  </td>
+                  <td>
+                    <strong>{{invoice.invoiceid}}</strong>
+                  </td>
+                  <td>{{invoice.date | date:'dd/MM/yyyy'}}</td>
+                  <td>{{invoice.customer_name}}</td>
+                  <td class="text-end">₨{{invoice.total_amount | number:'1.2-2'}}</td>
+                  <td class="text-end text-danger">
+                    <strong>₨{{invoice.outstanding_amount | number:'1.2-2'}}</strong>
+                  </td>
+                  <td>
+                    <span 
+                      [class.badge]="true"
+                      [class.bg-success]="getDaysOutstanding(invoice.date) <= 30"
+                      [class.bg-warning]="getDaysOutstanding(invoice.date) > 30 && getDaysOutstanding(invoice.date) <= 60"
+                      [class.bg-danger]="getDaysOutstanding(invoice.date) > 60">
+                      {{getDaysOutstanding(invoice.date)}} days
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot class="table-light">
+                <tr>
+                  <th colspan="4">Total Selected:</th>
+                  <th class="text-end">₨{{getTotalSelectedAmount() | number:'1.2-2'}}</th>
+                  <th class="text-end text-danger">
+                    <strong>₨{{getTotalOutstandingAmount() | number:'1.2-2'}}</strong>
+                  </th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Collection Section -->
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-hand-holding-usd me-2"></i>
+            Collect Payment - رقم وصول کریں
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="paymentForm" (ngSubmit)="collectPayment()">
+            <!-- Customer Info -->
+            <div class="mb-3" *ngIf="selectedCustomer">
+              <label class="form-label fw-bold">Customer Details</label>
+              <div class="p-3 bg-light rounded">
+                <h6 class="mb-1">{{selectedCustomer.account_name}}</h6>
+                <p class="mb-1 text-muted small">{{selectedCustomer.address || 'Address not available'}}</p>
+                <p class="mb-0">
+                  <strong class="text-danger">
+                    Total Outstanding: ₨{{selectedCustomer.outstanding_balance | number:'1.2-2'}}
+                  </strong>
+                </p>
+              </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Payment Method - ادائیگی کا طریقہ</label>
+              <select 
+                class="form-select" 
+                formControlName="paymentMethod"
+                required>
+                <option value="cash">Cash - نقد</option>
+                <option value="cheque">Cheque - چیک</option>
+                <option value="bank_transfer">Bank Transfer - بینک ٹرانسفر</option>
+                <option value="online">Online Payment - آن لائن</option>
+              </select>
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Amount - رقم</label>
+              <input 
+                type="number" 
+                class="form-control" 
+                formControlName="amount"
+                placeholder="Enter amount"
+                step="0.01"
+                min="0"
+                required>
+              <div class="form-text">
+                Selected Outstanding: ₨{{getTotalOutstandingAmount() | number:'1.2-2'}}
+              </div>
+            </div>
+
+            <!-- Reference -->
+            <div class="mb-3" *ngIf="paymentForm.get('paymentMethod')?.value !== 'cash'">
+              <label class="form-label fw-bold">
+                Reference No - حوالہ نمبر
+                <span *ngIf="paymentForm.get('paymentMethod')?.value === 'cheque'">(Cheque No)</span>
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                formControlName="reference"
+                [placeholder]="getReferenceLabel()"
+                required>
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Notes - نوٹس</label>
+              <textarea 
+                class="form-control" 
+                formControlName="notes"
+                rows="2"
+                placeholder="Payment notes (optional)"></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+              <button 
+                type="submit"
+                class="btn btn-success"
+                [disabled]="!paymentForm.valid || isProcessing || getTotalOutstandingAmount() === 0">
+                <i class="fas fa-save me-2"></i>
+                <span *ngIf="!isProcessing">Collect Payment</span>
+                <span *ngIf="isProcessing">
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                  Processing...
+                </span>
+              </button>
+              
+              <button 
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="clearPaymentForm()">
+                <i class="fas fa-times me-2"></i>Clear
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Quick Payment Summary -->
+      <div class="card shadow-sm mt-3">
+        <div class="card-header bg-warning text-dark">
+          <h6 class="mb-0">
+            <i class="fas fa-tachometer-alt me-2"></i>Today's Collections
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-6">
+              <div class="border-end">
+                <h5 class="text-success mb-1">₨{{todayCollections.amount | number:'1.0-0'}}</h5>
+                <small class="text-muted">Amount</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <h5 class="text-info mb-1">{{todayCollections.count}}</h5>
+              <small class="text-muted">Payments</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success Message -->
+<div 
+  class="alert alert-success alert-dismissible fade show position-fixed"
+  style="top: 20px; right: 20px; z-index: 1050; min-width: 300px;"
+  *ngIf="showSuccessMessage">
+  <i class="fas fa-check-circle me-2"></i>
+  <strong>Success!</strong> Payment collected successfully.
+  <button type="button" class="btn-close" (click)="showSuccessMessage = false"></button>
+</div>
+
+<!-- Error Message -->
+<div 
+  class="alert alert-danger alert-dismissible fade show position-fixed"
+  style="top: 20px; right: 20px; z-index: 1050; min-width: 300px;"
+  *ngIf="errorMessage">
+  <i class="fas fa-exclamation-triangle me-2"></i>
+  <strong>Error!</strong> {{errorMessage}}
+  <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+</div>

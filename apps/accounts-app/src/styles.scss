@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* You can add global styles to this file, and also import other style files */
+
+// Import CoreUI styles
+@import 'scss/styles';
+
+// Custom accounting application styles
+.accounting-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.accounting-sidebar {
+  background-color: #2f353a;
+}
+
+.dashboard-card {
+  transition: transform 0.2s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.financial-amount {
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.debit-amount {
+  color: #28a745;
+}
+
+.credit-amount {
+  color: #dc3545;
+}
+
+.account-code {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+.table-accounting {
+  .table-header {
+    background-color: #f8f9fa;
+    font-weight: 600;
+  }
+  
+  .table-row {
+    &:hover {
+      background-color: rgba(0, 123, 255, 0.05);
+    }
+  }
+}

@@ -1,0 +1,183 @@
+<div class="dashboard-container">
+  <!-- Header with user info -->
+  <div class="dashboard-header mb-4">
+    <div class="row align-items-center">
+      <div class="col">
+        <h1 class="h3 mb-0">Dashboard</h1>
+        <p class="text-muted mb-0" *ngIf="currentUser">
+          Welcome back, <strong>{{ currentUser.salesmanname }}</strong>
+        </p>
+      </div>
+      <div class="col-auto">
+        <span class="badge bg-success">Online</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">Loading dashboard data...</p>
+  </div>
+
+  <!-- Dashboard content -->
+  <div *ngIf="!isLoading">
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6 col-xl-3">
+        <div class="card stats-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-primary">
+                <i class="fas fa-box"></i>
+              </div>
+              <div class="ms-3">
+                <div class="stats-value">{{ stats.totalProducts }}</div>
+                <div class="stats-label">Total Products</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-xl-3">
+        <div class="card stats-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-success">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="ms-3">
+                <div class="stats-value">{{ stats.totalCustomers }}</div>
+                <div class="stats-label">Total Customers</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-xl-3">
+        <div class="card stats-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-info">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <div class="ms-3">
+                <div class="stats-value">{{ formatCurrency(stats.todaySales) }}</div>
+                <div class="stats-label">Today's Sales</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-xl-3">
+        <div class="card stats-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
+              <div class="ms-3">
+                <div class="stats-value">{{ stats.stockAlerts }}</div>
+                <div class="stats-label">Stock Alerts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+      <div class="col-xl-8">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Recent Invoices</h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="recentInvoices.length === 0" class="text-center text-muted py-3">
+              <i class="fas fa-file-invoice fa-2x mb-2"></i>
+              <p>No recent invoices found</p>
+            </div>
+            
+            <div *ngIf="recentInvoices.length > 0" class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Invoice #</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let invoice of recentInvoices">
+                    <td>{{ invoice.invoiceid }}</td>
+                    <td>{{ formatDate(invoice.date) }}</td>
+                    <td>{{ formatCurrency(invoice.net_amount) }}</td>
+                    <td>
+                      <span class="badge" [class]="invoice.dt_cr === 'sale' ? 'bg-success' : 'bg-info'">
+                        {{ invoice.dt_cr }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge bg-primary">Completed</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Quick Actions</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary" routerLink="/transactions/sale">
+                <i class="fas fa-plus me-2"></i>New Sale
+              </button>
+              <button class="btn btn-success" routerLink="/transactions/purchase">
+                <i class="fas fa-shopping-cart me-2"></i>New Purchase
+              </button>
+              <button class="btn btn-info" routerLink="/cash/recovery">
+                <i class="fas fa-money-bill-wave me-2"></i>Cash Recovery
+              </button>
+              <button class="btn btn-warning" routerLink="/reports">
+                <i class="fas fa-chart-bar me-2"></i>View Reports
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-3">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Sync Status</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+              <span>Last Sync:</span>
+              <span class="text-success">
+                <i class="fas fa-check-circle me-1"></i>
+                Just now
+              </span>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mt-2">
+              <span>Pending Items:</span>
+              <span class="badge bg-secondary">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

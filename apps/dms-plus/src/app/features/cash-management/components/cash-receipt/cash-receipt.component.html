@@ -1,0 +1,390 @@
+<div class="container-fluid">
+  <div class="row">
+    <!-- Header Section -->
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h4 class="mb-0">
+                <i class="fas fa-hand-holding-usd me-2"></i>
+                Cash Receipt Management - نقد وصولی منظوری
+              </h4>
+              <p class="mb-0 text-light">Record Cash Received from Various Sources</p>
+            </div>
+            <div class="col-md-4 text-end">
+              <button 
+                class="btn btn-light btn-sm me-2"
+                (click)="refreshData()"
+                [disabled]="isLoading">
+                <i class="fas fa-sync-alt me-1"></i>Refresh
+              </button>
+              <button 
+                class="btn btn-warning btn-sm"
+                (click)="exportData()">
+                <i class="fas fa-download me-1"></i>Export
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cash Receipt Form -->
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-plus-circle me-2"></i>
+            Add Cash Receipt - نقد وصولی شامل کریں
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="receiptForm" (ngSubmit)="addCashReceipt()">
+            <!-- Receipt Date -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Date - تاریخ <span class="text-danger">*</span></label>
+              <input 
+                type="date" 
+                class="form-control" 
+                formControlName="date"
+                [value]="today"
+                required>
+              <div class="invalid-feedback" *ngIf="receiptForm.get('date')?.invalid && receiptForm.get('date')?.touched">
+                Date is required
+              </div>
+            </div>
+
+            <!-- Account/Source -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Receipt Source - وصولی کا ذریعہ <span class="text-danger">*</span></label>
+              <select 
+                class="form-select" 
+                formControlName="accountId"
+                required>
+                <option value="">Select Source</option>
+                <optgroup label="Income Accounts - آمدنی اکاؤنٹس">
+                  <option *ngFor="let account of incomeAccounts" [value]="account.account_id">
+                    {{account.account_name}}
+                  </option>
+                </optgroup>
+                <optgroup label="Asset Accounts - اثاثے اکاؤنٹس">
+                  <option *ngFor="let account of assetAccounts" [value]="account.account_id">
+                    {{account.account_name}}
+                  </option>
+                </optgroup>
+                <optgroup label="Customer Accounts - کسٹمر اکاؤنٹس">
+                  <option *ngFor="let account of customerAccounts" [value]="account.account_id">
+                    {{account.account_name}} (Customer)
+                  </option>
+                </optgroup>
+              </select>
+              <div class="invalid-feedback" *ngIf="receiptForm.get('accountId')?.invalid && receiptForm.get('accountId')?.touched">
+                Please select a source account
+              </div>
+            </div>
+
+            <!-- Receipt Type -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Receipt Type - وصولی کی قسم <span class="text-danger">*</span></label>
+              <select 
+                class="form-select" 
+                formControlName="receiptType"
+                required>
+                <option value="">Select Type</option>
+                <option value="customer_payment">Customer Payment - کسٹمر ادائیگی</option>
+                <option value="loan_received">Loan Received - قرض موصولہ</option>
+                <option value="advance_received">Advance Received - پیشگی موصولہ</option>
+                <option value="sale_of_asset">Sale of Asset - اثاثہ فروخت</option>
+                <option value="bank_interest">Bank Interest - بینک سود</option>
+                <option value="other_income">Other Income - دیگر آمدن</option>
+                <option value="capital_injection">Capital Injection - سرمایہ اضافہ</option>
+                <option value="miscellaneous">Miscellaneous - متفرقات</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="receiptForm.get('receiptType')?.invalid && receiptForm.get('receiptType')?.touched">
+                Please select receipt type
+              </div>
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Amount - رقم <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">₨</span>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  formControlName="amount"
+                  placeholder="Enter amount"
+                  step="0.01"
+                  min="0.01"
+                  required>
+              </div>
+              <div class="invalid-feedback" *ngIf="receiptForm.get('amount')?.invalid && receiptForm.get('amount')?.touched">
+                Please enter a valid amount (minimum ₨0.01)
+              </div>
+            </div>
+
+            <!-- Reference Number -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Reference No - حوالہ نمبر</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                formControlName="referenceNo"
+                placeholder="Receipt/Transaction reference (optional)">
+              <div class="form-text">Cheque number, transaction ID, etc.</div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Description - تفصیلات <span class="text-danger">*</span></label>
+              <textarea 
+                class="form-control" 
+                formControlName="description"
+                rows="3"
+                placeholder="Enter receipt description/details"
+                required></textarea>
+              <div class="invalid-feedback" *ngIf="receiptForm.get('description')?.invalid && receiptForm.get('description')?.touched">
+                Description is required
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Notes - نوٹس</label>
+              <textarea 
+                class="form-control" 
+                formControlName="notes"
+                rows="2"
+                placeholder="Additional notes (optional)"></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+              <button 
+                type="submit"
+                class="btn btn-success btn-lg"
+                [disabled]="!receiptForm.valid || isProcessing">
+                <i class="fas fa-save me-2"></i>
+                <span *ngIf="!isProcessing">Add Cash Receipt</span>
+                <span *ngIf="isProcessing">
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                  Processing...
+                </span>
+              </button>
+              
+              <button 
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="clearForm()">
+                <i class="fas fa-times me-2"></i>Clear Form
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Cash Receipts -->
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="fas fa-history me-2"></i>
+              Recent Cash Receipts - حالیہ نقد وصولیاں
+            </h5>
+            <span class="badge bg-light text-dark">{{recentReceipts.length}} records</span>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div *ngIf="isLoading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading receipts...</p>
+          </div>
+
+          <div *ngIf="!isLoading && recentReceipts.length === 0" class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Cash Receipts</h5>
+            <p class="text-muted">No cash receipts recorded today</p>
+          </div>
+
+          <div *ngIf="!isLoading && recentReceipts.length > 0" class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th>Date</th>
+                  <th>Source</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th width="10%">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let receipt of recentReceipts; let i = index" 
+                    [class.table-success]="i === 0 && showHighlight">
+                  <td>
+                    <small class="fw-bold">{{receipt.date | date:'dd/MM/yy'}}</small><br>
+                    <small class="text-muted">{{receipt.date | date:'HH:mm'}}</small>
+                  </td>
+                  <td>
+                    <div class="fw-bold">{{receipt.account_name}}</div>
+                    <small class="text-muted">{{receipt.reference_no || 'No Reference'}}</small>
+                  </td>
+                  <td>
+                    <span class="badge" [ngClass]="getReceiptTypeBadge(receipt.receipt_type)">
+                      {{getReceiptTypeLabel(receipt.receipt_type)}}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="fw-bold text-success">₨{{receipt.credit | number:'1.2-2'}}</div>
+                  </td>
+                  <td>
+                    <div class="dropdown">
+                      <button 
+                        class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                        type="button" 
+                        [id]="'dropdownMenuButton' + i"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v"></i>
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li>
+                          <button class="dropdown-item" (click)="viewReceipt(receipt)">
+                            <i class="fas fa-eye me-2"></i>View Details
+                          </button>
+                        </li>
+                        <li>
+                          <button class="dropdown-item" (click)="editReceipt(receipt)">
+                            <i class="fas fa-edit me-2"></i>Edit
+                          </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                          <button class="dropdown-item text-danger" (click)="deleteReceipt(receipt)">
+                            <i class="fas fa-trash me-2"></i>Delete
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Summary -->
+      <div class="card shadow-sm mt-3">
+        <div class="card-header bg-warning text-dark">
+          <h6 class="mb-0">
+            <i class="fas fa-chart-pie me-2"></i>Today's Cash Receipts Summary
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-6">
+              <div class="border-end">
+                <h4 class="text-success mb-1">₨{{todaySummary.total | number:'1.0-0'}}</h4>
+                <small class="text-muted">Total Amount</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <h4 class="text-primary mb-1">{{todaySummary.count}}</h4>
+              <small class="text-muted">Total Receipts</small>
+            </div>
+          </div>
+          <hr>
+          <div class="row">
+            <div class="col-6">
+              <small class="text-muted d-block">Largest Receipt</small>
+              <span class="fw-bold text-success">₨{{todaySummary.largest | number:'1.2-2'}}</span>
+            </div>
+            <div class="col-6">
+              <small class="text-muted d-block">Average Receipt</small>
+              <span class="fw-bold text-info">₨{{todaySummary.average | number:'1.2-2'}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success Message -->
+<div 
+  class="alert alert-success alert-dismissible fade show position-fixed"
+  style="top: 20px; right: 20px; z-index: 1050; min-width: 300px;"
+  *ngIf="showSuccessMessage">
+  <i class="fas fa-check-circle me-2"></i>
+  <strong>Success!</strong> {{successMessage}}
+  <button type="button" class="btn-close" (click)="showSuccessMessage = false"></button>
+</div>
+
+<!-- Error Message -->
+<div 
+  class="alert alert-danger alert-dismissible fade show position-fixed"
+  style="top: 20px; right: 20px; z-index: 1050; min-width: 300px;"
+  *ngIf="errorMessage">
+  <i class="fas fa-exclamation-triangle me-2"></i>
+  <strong>Error!</strong> {{errorMessage}}
+  <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+</div>
+
+<!-- Receipt Details Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" *ngIf="selectedReceipt">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-receipt me-2"></i>Cash Receipt Details
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <strong>Date:</strong><br>
+            <span>{{selectedReceipt.date | date:'fullDate'}}</span>
+          </div>
+          <div class="col-md-6">
+            <strong>Amount:</strong><br>
+            <span class="text-success fs-5">₨{{selectedReceipt.credit | number:'1.2-2'}}</span>
+          </div>
+        </div>
+        <hr>
+        <div class="row">
+          <div class="col-md-6">
+            <strong>Source Account:</strong><br>
+            <span>{{selectedReceipt.account_name}}</span>
+          </div>
+          <div class="col-md-6">
+            <strong>Receipt Type:</strong><br>
+            <span class="badge" [ngClass]="getReceiptTypeBadge(selectedReceipt.receipt_type)">
+              {{getReceiptTypeLabel(selectedReceipt.receipt_type)}}
+            </span>
+          </div>
+        </div>
+        <hr>
+        <div>
+          <strong>Description:</strong><br>
+          <p class="mb-1">{{selectedReceipt.description}}</p>
+        </div>
+        <div *ngIf="selectedReceipt.reference_no">
+          <strong>Reference Number:</strong><br>
+          <span class="badge bg-secondary">{{selectedReceipt.reference_no}}</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" (click)="editReceipt(selectedReceipt)" data-bs-dismiss="modal">
+          <i class="fas fa-edit me-1"></i>Edit
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
