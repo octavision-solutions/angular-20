@@ -42,35 +42,97 @@ Use the plugin's generator to create new projects. For example, to create a new 
 
 ```sh
 # Generate an app
-npx nx g @nx/react:app demo
+# Angular 20 Workspace (Nx)
 
-# Generate a library
-npx nx g @nx/react:lib some-lib
+Monorepo for an Angular 20 application suite with a PHP (CodeIgniter 4) backend API. Built with Nx for efficient builds, shared libraries, and modular development.
+
+## Overview
+- Angular 20 + Nx workspace with multiple apps
+- Shared UI and services libraries
+- Backend API using CodeIgniter 4 in `backend-api/`
+- Styling: Bootstrap 5 (compiled CSS), modern Sass modules (`@use`)
+
+## Repository Structure
+- `apps/`
+	- `dms-plus/` – Main Angular app (Dashboard, Accounts, Inventory, Products, Transactions, Admin, etc.)
+	- `accounts-app/`, `my-app/`, `api/` – Additional/sample Angular apps
+- `libs/`
+	- `shared-ui/` – Reusable UI components (e.g., SearchList)
+	- `shared-services/` – Cross-app services (API, tokens)
+	- `ui/` – Legacy/simple UI helpers
+- `backend-api/` – CodeIgniter 4 REST API (see `REST_API_DOCUMENTATION.md`)
+
+## Requirements
+- Node.js 20+ and npm
+- PHP 8.1+
+- MySQL/MariaDB (or compatible)
+
+## Setup
+```sh
+# Install dependencies
+npm install
+
+# Explore the project graph (optional)
+npx nx graph
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+## Run the Angular App (dms-plus)
+```sh
+# Development server
+npx nx serve dms-plus
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+# Production build
+npx nx build dms-plus
 
+# Lint and tests
+npx nx lint dms-plus
+npx nx test dms-plus
+```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Angular environment settings (API base URL, etc.) live under the app’s `src/environments` directory. Adjust as needed for your setup.
 
-## Install Nx Console
+## Backend API (CodeIgniter 4)
+```sh
+# Copy environment and configure DB
+cp backend-api/.env.example backend-api/.env  # if present
+# Or edit backend-api/app/Config/Database.php
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+# Create database schema
+mysql -u <user> -p <db_name> < backend-api/database_setup.sql
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+# Serve API locally (PHP built-in server)
+php -S localhost:8080 -t backend-api/public
+```
 
-## Useful links
+More details and endpoints: `backend-api/REST_API_DOCUMENTATION.md` and `backend-api/README.md`.
 
-Learn more:
+## Notable Shared Components
+- `shared-ui/SearchList`
+	- Debounced filtering by keys
+	- Customizable templates (item/header/footer/empty)
+	- Keyboard navigation (ArrowUp/Down/Enter) and `focus()` API
+	- Click-to-focus for seamless keyboard usage
 
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Styling Notes
+- Bootstrap 5 via compiled CSS to avoid vendor Sass warnings
+- Migrated app styles to modern Sass (`@use`); reduced legacy lints
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Scripts Cheatsheet
+```sh
+# Generic Nx usage
+npx nx <target> <project>
+
+# Examples
+npx nx serve dms-plus
+npx nx build dms-plus
+npx nx lint dms-plus
+npx nx test dms-plus
+```
+
+## Contributing
+1. Create a feature branch
+2. Commit with conventional messages
+3. Open a PR against `main`
+
+## License
+MIT
