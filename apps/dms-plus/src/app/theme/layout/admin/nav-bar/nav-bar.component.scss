@@ -1,0 +1,26 @@
+/* Align breadcrumb visuals tightly within header */
+:host ::ng-deep app-breadcrumb .page-header {
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	box-shadow: none;
+}
+
+:host ::ng-deep app-breadcrumb .page-header-title h5 {
+	margin: 0;
+	line-height: 1.25;
+}
+
+:host ::ng-deep app-breadcrumb ul.breadcrumb {
+	margin: 0;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+}
+
+/* Align the avatar text baseline with breadcrumb title */
+.drp-user > a {
+	line-height: 1.25;
+}
+
