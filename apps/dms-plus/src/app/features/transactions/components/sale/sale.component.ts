@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { SearchEmptyTemplateDirective, SearchItemTemplateDirective, SearchListComponent } from '@version-20/shared-ui';
@@ -10,7 +11,7 @@ import { DatabaseService } from '../../../../core/services/database.service';
 @Component({
   selector: 'app-sale',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SearchListComponent, SearchItemTemplateDirective, SearchEmptyTemplateDirective],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgSelectModule, SearchListComponent, SearchItemTemplateDirective, SearchEmptyTemplateDirective],
   templateUrl: './sale.component.html',
   styleUrls: ['./sale.component.scss']
 })
